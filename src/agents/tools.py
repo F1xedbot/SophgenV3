@@ -5,7 +5,7 @@ from schema.agents import InjectionSchema
 from agents.states import InjectorState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
-from config.agent import INJECTOR_CONFIG, VALIDATOR_CONFIG
+from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG
 
 class BaseTools:
     def __init__(self):
@@ -25,7 +25,7 @@ class BaseTools:
 
 
 class InjectorTools(BaseTools):
-    def __init__(self, config: Optional[dict] | None = INJECTOR_CONFIG):
+    def __init__(self, config: Optional[dict] | None = INJECTOR_TOOL_CONFIG):
         super().__init__()
         self.config = config
         self.table_name = self.config["table_name"]
@@ -65,7 +65,7 @@ class InjectorTools(BaseTools):
         return "\n".join(messages)
     
 class ValidatorTools(BaseTools):
-    def __init__(self, config: Optional[dict] | None = VALIDATOR_CONFIG):
+    def __init__(self, config: Optional[dict] | None = VALIDATOR_TOOL_CONFIG):
         super().__init__()
         self.config = config
         self.table_name = self.config["table_name"]

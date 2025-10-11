@@ -1,10 +1,10 @@
 from utils.enum import AgentTable
 
-INJECTOR_CONFIG = {
+INJECTOR_TOOL_CONFIG = {
     "table_name": AgentTable.INJECTOR
 }
 
-VALIDATOR_CONFIG = {
+VALIDATOR_TOOL_CONFIG = {
     "table_name": AgentTable.VALIDATOR,
     "injection_group_key": "func_name",
     "injection_table": AgentTable.INJECTOR,
