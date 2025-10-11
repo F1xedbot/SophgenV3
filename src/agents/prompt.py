@@ -21,7 +21,7 @@ Schema (each injection):
   "transformed_code": "<single-line change>",
   "tags": ["tag1","tag2",...],
   "modification": "<short phrase or empty>",
-  "camouflage_tag": "<short tag or empty>",
+  "camouflage": "<short phrase or empty>",
   "attack_vec": "<short id or empty>"
 }
 
