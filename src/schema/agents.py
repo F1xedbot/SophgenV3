@@ -2,7 +2,7 @@ from typing import List
 from pydantic import BaseModel, Field
 
 class Context(BaseModel):
-    raw_code: str
+    func_code: str
     roi: str
     cwe_details: str
 

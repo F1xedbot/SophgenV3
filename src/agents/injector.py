@@ -16,7 +16,7 @@ class Injector:
             state_schema=self.state_schema,
             prompt=self.build_messages,
         )
-        self.required_keys = ["raw_code", "roi", "cwe_details"]
+        self.required_keys = ["func_code", "roi", "cwe_details"]
 
     def build_messages(self, state: InjectorState) -> list[AnyMessage]:
         """Construct system + human messages for the injection reasoning context."""
@@ -24,7 +24,7 @@ class Injector:
             SystemMessage(content=INJECTOR_PROMPT),
             HumanMessage(
                 content=INJECTOR_CONTEXT_PROMPT.format(
-                    function_code=state.context.raw_code,
+                    function_code=state.context.func_code,
                     roi=state.context.roi,
                     cwe_details=state.context.cwe_details
                 )
@@ -52,7 +52,7 @@ class Injector:
             state_data = state.model_dump() if hasattr(state, "model_dump") else dict(state)
             initial_state = self.state_schema(**state_data)
             graph = self.agent
-            result = graph.invoke(initial_state)
+            result = await graph.ainvoke(initial_state)
             return result
         except Exception as e:
             raise RuntimeError(f"Agent run failed: {e}") from e
