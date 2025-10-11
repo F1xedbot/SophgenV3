@@ -2,7 +2,7 @@ import inspect
 from typing import List, Callable, Annotated
 from langgraph.prebuilt import InjectedState
 from schema.agents import InjectionSchema
-from agents.state import InjectorState
+from agents.states import InjectorState
 
 class BaseTools:
     def get_tools(self) -> List[Callable]:

@@ -2,7 +2,7 @@ from services.llm import LLMService
 from agents.prompt import INJECTOR_CONTEXT_PROMPT, INJECTOR_PROMPT
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
-from agents.state import InjectorState
+from agents.states import InjectorState
 from agents.tools import BaseTools
 
 class Injector:

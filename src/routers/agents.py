@@ -7,7 +7,7 @@ from agents.tools import InjectorTools
 from services.local.cache import load_local_cache
 from utils.filter import filter_dict_fields
 from schema.agents import Context
-from agents.state import InjectorState
+from agents.states import InjectorState
 from schema.requests import InjectorRequest
 
 router = APIRouter()
