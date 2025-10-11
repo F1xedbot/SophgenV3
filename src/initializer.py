@@ -1,6 +1,6 @@
 import logging
 import os
-from services.sqlite3 import init_db
+from services.sqlite import SQLiteDBService
 
 def init():
     """
@@ -14,5 +14,6 @@ def init():
     )
     logging.info("Logging initialized")
 
-    init_db()
+    db = SQLiteDBService()
+    db.init_db()
     logging.info("Database initialized")
