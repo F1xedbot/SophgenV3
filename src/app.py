@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from src.initializer import init
-import uvicorn
 
 # Initialize environment & logging
 init()

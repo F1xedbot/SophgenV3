@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Callable, Annotated, Union
+from typing import List, Callable, Annotated
 from langgraph.prebuilt import InjectedState
 from schema.agents import InjectionSchema
 from agents.state import InjectorState
