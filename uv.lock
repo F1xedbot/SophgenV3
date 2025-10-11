@@ -141,6 +141,20 @@ wheels = [
 ]
 
 [[package]]
+name = "fastapi"
+version = "0.118.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "starlette" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/e0/b2c4c5fed29587f0c0c56cec9b59f2c3ca58fd40e6c96d9a788219662a35/fastapi-0.118.3.tar.gz", hash = "sha256:5bf36d9bb0cd999e1aefcad74985a6d6a1fc3a35423d497f9e1317734633411d", size = 312055, upload-time = "2025-10-10T10:40:18.15Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/24/04/2f9e8a965f4214883258a6f716fea324d1b81e97bce6346cfbafffe6b86c/fastapi-0.118.3-py3-none-any.whl", hash = "sha256:8b9673dc083b4b9d3d295d49ba1c0a2abbfb293d34ba210fd9b0a90d5f39981e", size = 97957, upload-time = "2025-10-10T10:40:16.118Z" },
+]
+
+[[package]]
 name = "filetype"
 version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -525,6 +539,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/e2/5d/38887a18b68aa7acb
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/a4/db5903757d710c4c401e7a87f6ba53a8242c580e8c1df5869b7acb949b2d/langsmith-0.4.34-py3-none-any.whl", hash = "sha256:3b83b2544f99bb8f6fca2681ee80fe6a44b0578c29e809e5a4e72fdee4db9146", size = 386981, upload-time = "2025-10-09T23:34:24.386Z" },
 ]
+
+[[package]]
+name = "logging"
+version = "0.4.9.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/4b/979db9e44be09f71e85c9c8cfc42f258adfb7d93ce01deed2788b2948919/logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417", size = 96029, upload-time = "2013-06-04T23:43:22.086Z" }
 
 [[package]]
 name = "numpy"
@@ -1218,10 +1238,12 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiofiles" },
     { name = "dotenv" },
+    { name = "fastapi" },
     { name = "langchain-google-genai" },
     { name = "langchain-openai" },
     { name = "langgraph" },
     { name = "langgraph-prebuilt" },
+    { name = "logging" },
     { name = "numpy" },
     { name = "orjson" },
     { name = "pandas" },
@@ -1232,14 +1254,29 @@ dependencies = [
 requires-dist = [
     { name = "aiofiles", specifier = ">=25.1.0" },
     { name = "dotenv", specifier = ">=0.9.9" },
+    { name = "fastapi", specifier = ">=0.118.3" },
     { name = "langchain-google-genai", specifier = ">=2.1.12" },
     { name = "langchain-openai", specifier = ">=0.3.35" },
     { name = "langgraph", specifier = ">=0.6.10" },
     { name = "langgraph-prebuilt", specifier = ">=0.6.4" },
+    { name = "logging", specifier = ">=0.4.9.6" },
     { name = "numpy", specifier = ">=2.3.3" },
     { name = "orjson", specifier = ">=3.11.3" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "ruff", specifier = ">=0.14.0" },
+]
+
+[[package]]
+name = "starlette"
+version = "0.48.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a7/a5/d6f429d43394057b67a6b5bbe6eae2f77a6bf7459d961fdb224bf206eee6/starlette-0.48.0.tar.gz", hash = "sha256:7e8cee469a8ab2352911528110ce9088fdc6a37d9876926e73da7ce4aa4c7a46", size = 2652949, upload-time = "2025-09-13T08:41:05.699Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/be/72/2db2f49247d0a18b4f1bb9a5a39a0162869acf235f3a96418363947b3d46/starlette-0.48.0-py3-none-any.whl", hash = "sha256:0764ca97b097582558ecb498132ed0c7d942f233f365b86ba37770e026510659", size = 73736, upload-time = "2025-09-13T08:41:03.869Z" },
 ]
 
 [[package]]
