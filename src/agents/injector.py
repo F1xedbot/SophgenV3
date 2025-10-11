@@ -31,7 +31,6 @@ class Injector:
             ),
             *state.messages
         ]
-        print(messages)
         return messages
     
     async def run(self, state: InjectorState) -> InjectorState:

@@ -3,34 +3,29 @@ INJECTOR_PROMPT = """
 CWE Code Injector
 
 # Goal
-Introduce one or more CWE vulnerabilities across the provided ROIs. Each ROI can yield **at most one candidate injection**, but only if the modification is meaningful and non-trivial.
+Introduce one or more CWE vulnerabilities across the provided ROIs. Each ROI may yield at most one injection, only if the change is meaningful and non-trivial.
+
+# Tool (must use)
+You will call the runtime tool add_injection(injections) once, after preparing all candidates. The tool validates/persists accepted injections; use only persisted injections in the final output.
 
 # Hard assumptions (must follow)
-- ALWAYS assume the provided original_pattern / ROI is non-vulnerable and requires changes to produce a valid injection.
-- You MUST NOT output any justification, explanation, or claim that the original ROI was already vulnerable. Claims such as "no changes were made because the original is already vulnerable" are prohibited.
-- If you determine no meaningful modification is possible, simply skip that ROI (do not include any justification or explanatory text).
-- The `implementation.transformed_code` MUST be **different** from `implementation.original_pattern`. Returning them identical is strictly forbidden.
+- ALWAYS assume original_pattern is non-vulnerable and needs change.
+- DO NOT output justification, explanation, or claims the original was already vulnerable.
+- If no meaningful modification is possible, skip the ROI (omit it).
+- implementation.transformed_code MUST differ from implementation.original_pattern.
 
 # Instructions
-1. Process ROIs sequentially in the order provided.
-2. For each ROI:
-   - Evaluate relevant CWEs and choose one appropriate CWE (if any).
-   - Propose **at most one injection** that makes a meaningful, non-trivial change to the ROI which introduces the vulnerability.
-   - If no meaningful modification is possible, skip the ROI (omit it from output).
-3. Do not attempt to modify an ROI more than once.
-4. Maintain code style, formatting, and functional behavior as much as possible given the injection.
-5. Do not modify code outside the ROI.
-6. The LLM must produce code changes — not only descriptions — and the transformed code must reflect the injected vulnerability.
-7. Before finalizing output, explicitly verify that `original_pattern` and `transformed_code` are not identical. If they are identical, discard that injection.
-
-# Output Requirements (strict)
-- Output must be ONLY a single valid JSON object (no additional prose, no code fences).
-
-- If no valid injections are produced for any ROI, return:
-  { "injections": [] }
+1. You must process ROIs in order. For each ROI choose one CWE (if any) and produce one meaningful code change inside the ROI only.
+2. Do not modify code outside the ROI. Preserve style/formatting and functional behavior as far as reasonable.
+3. Produce concrete transformed code (not descriptions).
+4. Prepare at most one candidate per ROI for all ROIs first. Then call add_injection(injections) once with the full list and read the tool result.
+5. Final output: emit ONLY one JSON object and nothing else:
+   - If any injections were accepted: { "injections": [ ... ] }
+   - Otherwise: { "injections": [] }
+6. Ensure transformed_code != original_pattern and at most one injection per ROI.
 
 # Termination
-After processing all ROIs, output the single JSON object and nothing else.
+Output the single JSON object and stop.
 """
 
 INJECTOR_CONTEXT_PROMPT = """

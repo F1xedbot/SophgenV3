@@ -21,58 +21,33 @@ class BaseTools:
 class InjectorTools(BaseTools):
     def add_injection(
         self,
-        injections: dict,
+        injections: list[InjectionSchema],
         state: Annotated[InjectorState, InjectedState]
     ) -> str:
         """
-        Add one or more CWE injections.
+        Add CWE injections from a list of InjectionSchema objects.
 
-        Accepts:
-        - Injection or list[Injection]
-        - dict or list[dict] matching the Injection model
-
-        Performs validation for each entry:
-        - Skip None or invalid formats
-        - Skip if transformed_code == original_pattern
-        Returns a detailed message per injection (ROI + CWE + status).
+        Skips injections where transformed_code == original_pattern.
+        Returns a message per injection (ROI + CWE + status).
         """
-        if injections is None:
+        if not injections:
             return "No injections provided; nothing added."
-
-        # Normalize input to list
-        if not isinstance(injections, list):
-            injections = [injections]
 
         messages = []
 
         for inj in injections:
-            # --- Handle None ---
-            if inj is None:
-                messages.append("Injection is None, nothing added.")
-                continue
-
-            # --- Handle dict conversion ---
-            if isinstance(inj, dict):
-                try:
-                    inj = InjectionSchema(**inj)
-                except Exception as e:
-                    messages.append(f"Invalid injection format: {e}")
-                    continue
-
-            # --- Validate content ---
             if inj.implementation.original_pattern == inj.implementation.transformed_code:
                 messages.append(
-                    f"ROI {getattr(inj, 'roi_index', '?')} ({getattr(inj, 'cwe_label', '?')}): "
-                    f"No meaningful change detected; injection skipped."
+                    f"ROI {inj.roi_index} ({inj.cwe_label}): No meaningful change; skipped."
                 )
                 continue
 
-            # --- Add to state ---
             state.items.append(inj)
             messages.append(
                 f"Injection for ROI {inj.roi_index} with CWE {inj.cwe_label} added successfully."
             )
 
         return "\n".join(messages)
+
 
 
