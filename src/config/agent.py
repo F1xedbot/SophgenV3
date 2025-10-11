@@ -7,5 +7,6 @@ INJECTOR_CONFIG = {
 VALIDATOR_CONFIG = {
     "table_name": AgentTable.VALIDATOR,
     "injection_group_key": "func_name",
-    "injection_table": AgentTable.INJECTOR
+    "injection_table": AgentTable.INJECTOR,
+    "excluded_keys": ["id", "func_name", "timestamp"]
 }

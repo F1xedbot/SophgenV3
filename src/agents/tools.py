@@ -71,8 +71,29 @@ class ValidatorTools(BaseTools):
         self.table_name = self.config["table_name"]
         self.injection_table = self.config["injection_table"]
         self.injection_group_key = self.config["injection_group_key"]
+        self.excluded_keys = self.config['excluded_keys']
 
     def get_injections(self, func_name: str):
+        """
+        Retrieve all injections for a given function name,
+        filtering out excluded keys from each record.
+        """
         if not func_name:
-            return self.db.get_data_group(self.injection_table, self.injection_group_key, func_name)
-        return []
+            return []
+
+        all_injections = self.db.get_data_group(
+            self.injection_table,
+            self.injection_group_key,
+            func_name
+        )
+
+        if not all_injections:
+            return []
+
+        filtered = [
+            {k: v for k, v in row.items() if k not in self.excluded_keys}
+            for row in all_injections
+        ]
+
+        return filtered
+
