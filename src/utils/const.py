@@ -1,0 +1,1 @@
+LOCAL_CWE_CACHE_PATH = "src/services/local/data_src/cwe_data.json"
