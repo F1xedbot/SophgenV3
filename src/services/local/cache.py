@@ -2,8 +2,11 @@ from utils.const import LOCAL_CWE_CACHE_PATH
 import orjson
 import aiofiles
 import os
+from pathlib import Path
 
-async def load_local_cache(file_path: str = LOCAL_CWE_CACHE_PATH) -> dict:
+FULL_LOCAL_CWE_CACHE_PATH = Path(__file__).parent / LOCAL_CWE_CACHE_PATH
+
+async def load_local_cache(file_path: str = FULL_LOCAL_CWE_CACHE_PATH) -> dict:
     """
     Asynchronously loads a local JSON cache using orjson.
     Returns an empty dict if file not found or invalid.
@@ -36,7 +39,7 @@ async def read_cache(cache: dict, key: str) -> dict:
     return local_cache.get(key, {})
 
 
-async def update_cache(cache: dict, key: str, value: dict, file_path: str = LOCAL_CWE_CACHE_PATH) -> None:
+async def update_cache(cache: dict, key: str, value: dict, file_path: str = FULL_LOCAL_CWE_CACHE_PATH) -> None:
     """
     Updates both the in-memory cache and the local JSON backup file.
     """

@@ -1,1 +1,1 @@
-LOCAL_CWE_CACHE_PATH = "src/services/local/data_src/cwe_data.json"
+LOCAL_CWE_CACHE_PATH = "data_src/cwe_data.json"
