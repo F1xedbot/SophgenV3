@@ -17,7 +17,7 @@ async def run_injector(req: InjectorRequest):
     llm = LLMService(LLMModels.GEMINI_2_5_FLASH_LITE)
     loaded_cwe_cache = await load_local_cache()
     cwe_fields = ["cwe_id", "cwe_name", "vulnerable_code_patterns", "code_injection_points"]
-    cwe_details = filter_dict_fields(req.cwe_ids, loaded_cwe_cache, cwe_fields)
+    cwe_details = filter_dict_fields(req.cwe_ids.split(','), loaded_cwe_cache, cwe_fields)
 
     injector_tools = InjectorTools()
     injector_agent = Injector(llm, injector_tools)
