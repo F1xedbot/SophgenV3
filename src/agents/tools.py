@@ -21,7 +21,7 @@ class BaseTools:
 class InjectorTools(BaseTools):
     def add_injection(
         self,
-        injections: Union[InjectionSchema, dict, list[Union[InjectionSchema, dict]]],
+        injections: dict,
         state: Annotated[InjectorState, InjectedState]
     ) -> str:
         """
