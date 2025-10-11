@@ -23,6 +23,11 @@ class ImplementationSchema(BaseModel):
         description="Short disguise tag, e.g. 'style-preserved', 'renamed-var'"
     )
 
+class Context(BaseModel):
+    raw_code: str
+    roi: str
+    cwe_details: str
+
 class InjectionSchema(BaseModel):
     roi_index: int = Field(..., description="1-based index of the ROI being modified")
     cwe_label: str = Field(..., description="CWE-ID")
