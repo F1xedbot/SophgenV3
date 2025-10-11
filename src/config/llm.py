@@ -1,9 +1,12 @@
-from typing import Optional
+from typing import Optional, List
 from utils.enum import LLMProvider
 
 class LLMKeyManager:
+    """
+    Manages API keys for different providers.
+    """
     def __init__(self):
-        self.keys: dict[LLMProvider, list[Optional[str]]] = {}
+        self.keys: dict[LLMProvider, List[Optional[str]]] = {}
 
     def get_key(self, provider: LLMProvider, index: int = 0) -> str:
         keys = self.keys.get(provider)
@@ -16,6 +19,9 @@ class LLMKeyManager:
 
 
 class LLMConfig:
+    """
+    Immutable configuration for an LLM model.
+    """
     def __init__(
         self,
         model_name: str,
@@ -29,6 +35,12 @@ class LLMConfig:
         self.key_manager = key_manager
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self._frozen = True
+
+    def __setattr__(self, name, value):
+        if getattr(self, "_frozen", False):
+            raise AttributeError("LLMConfig is immutable")
+        super().__setattr__(name, value)
 
     @property
     def api_key(self) -> str:

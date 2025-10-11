@@ -6,7 +6,7 @@ from utils.enum import LLMProvider
 
 class LLMService:
     """
-    Wrapper around LLM clients (OpenAI / Google) for simplified usage.
+    Wrapper around LLM clients (OpenAI / Google).
     Automatically finds config by model name.
     """
     def __init__(self, model_name: str):
@@ -37,8 +37,6 @@ class LLMService:
             raise ValueError(f"Unsupported provider: {self.config.provider}")
 
     def generate(self, messages: List[Dict], **kwargs) -> str:
-        """
-        Simple wrapper to call the LLM.
-        """
+        """Simple wrapper to call the LLM."""
         response = self.client.invoke(messages, **kwargs)
         return getattr(response, "content", response)
