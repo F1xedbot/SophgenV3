@@ -1,15 +1,11 @@
 # Resolve the current script directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# Load environment variables
-$EnvScript = Join-Path $ScriptDir "env.ps1"
-if (Test-Path $EnvScript) {
-    Write-Host "Loading environment from env.ps1..."
-    . $EnvScript
-} else {
-    Write-Warning "env.ps1 not found. Continuing without it."
-}
+# Set src folder to PYTHONPATH and other env vars
+$env:PYTHONPATH = Join-Path $ScriptDir "src"
+$env:GRPC_VERBOSITY = "NONE"
 
-# Start FastAPI app with uvicorn
-Write-Host "Starting FastAPI app..."
-uvicorn src.app:app --reload --host 127.0.0.1 --port 3008
+Write-Host "Environment loaded for SophGenV3"
+
+# Start FastAPI app via uvicorn
+uvicorn src.app:app --reload --host 127.0.0.1 --port 3008 --env-file .env
