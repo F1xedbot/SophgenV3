@@ -17,4 +17,5 @@ dependencies = [
     "orjson>=3.11.3",
     "pandas>=2.3.3",
     "ruff>=0.14.0",
+    "uvicorn>=0.37.0",
 ]
