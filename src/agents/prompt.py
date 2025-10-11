@@ -2,9 +2,6 @@ INJECTOR_PROMPT = """
 # Role
 CWE Code Injector
 
-Similar success attempt:
-{similar_attempt}
-
 # Goal
 Introduce one or more CWE vulnerabilities across the provided ROIs. Each ROI can yield **at most one candidate injection**, but only if the modification is meaningful and non-trivial.
 
