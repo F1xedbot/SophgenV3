@@ -1,5 +1,6 @@
-from typing import get_origin, get_args, List, Dict, Union
+from typing import get_origin, get_args, List, Dict, Union, Any
 from pydantic import BaseModel
+import json
 
 _SIMPLE_TYPE_MAP = {
     int: "INTEGER",
@@ -35,7 +36,6 @@ def _sqlite_type_from_annotation(annotation) -> str:
 
     # Fallback: treat as TEXT (JSON)
     return "TEXT"
-
 
 def _collect_fields_from_model(model_cls: type[BaseModel], prefix: str = "") -> List[tuple]:
     """
@@ -85,6 +85,22 @@ def _collect_fields_from_model(model_cls: type[BaseModel], prefix: str = "") -> 
 
     return fields
 
+def flatten_pydantic(model: BaseModel, prefix: str = "") -> Dict[str, Any]:
+    """
+    Flatten a Pydantic model into a dict suitable for SQL insertion.
+    Nested BaseModels are flattened with prefix.
+    Lists and dicts are serialized as JSON strings.
+    """
+    flat_data = {}
+    for name, value in model:
+        col_name = f"{prefix}{name}"
+        if isinstance(value, BaseModel):
+            flat_data.update(flatten_pydantic(value, prefix=f"{col_name}_"))
+        elif isinstance(value, (list, dict)):
+            flat_data[col_name] = json.dumps(value)
+        else:
+            flat_data[col_name] = value
+    return flat_data
 
 def pydantic_model_to_create_table_sql(
     model_cls: type[BaseModel],
