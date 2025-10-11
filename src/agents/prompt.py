@@ -78,3 +78,13 @@ Termination:
   { "validation_results": [ ... ] }
 - No extra keys, no prose.
 """
+
+VALIDATOR_CONTEXT_PROMPT="""
+# Context
+Function Code:
+{function_code}
+
+Injections:
+{injections}
+(injections are sequentially ordered top-to-bottom)
+"""
