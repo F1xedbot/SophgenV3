@@ -1,7 +1,7 @@
 import inspect
 from typing import List, Callable, Annotated, Optional
 from langgraph.prebuilt import InjectedState
-from schema.agents import InjectionSchema
+from schema.agents import InjectionSchema, ValidationOuput, Context
 from agents.states import InjectorState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
@@ -55,7 +55,7 @@ class InjectorTools(BaseTools):
                 continue
 
             injection_data = flatten_pydantic(inj)
-            injection_data["func_name"] = state.func_name
+            injection_data["func_name"] = state.context.func_name
             self.db.save_data(self.table_name, injection_data)
 
             messages.append(
@@ -73,7 +73,7 @@ class ValidatorTools(BaseTools):
         self.injection_group_key = self.config["injection_group_key"]
         self.excluded_keys = self.config['excluded_keys']
 
-    def get_injections(self, func_name: str):
+    def get_injections(self, func_name: str) -> dict:
         """
         Retrieve all injections for a given function name,
         filtering out excluded keys from each record.
@@ -96,4 +96,18 @@ class ValidatorTools(BaseTools):
         ]
 
         return filtered
+    
+    def save_validations(self, validations: ValidationOuput, context: Context) -> bool:
+        """
+        Save all validation results from ValidationOuput to the database.
+        """
+        if not validations or not validations.validation_results:
+            return False
+
+        for item in validations.validation_results:
+            validation_data = flatten_pydantic(item)
+            validation_data["func_name"] = context.func_name
+            self.db.save_data(self.table_name, validation_data)
+            
+        return True
 

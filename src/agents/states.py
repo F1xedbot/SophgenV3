@@ -3,4 +3,3 @@ from langgraph.prebuilt.chat_agent_executor import AgentStatePydantic
 
 class InjectorState(AgentStatePydantic):
     context: Context
-    func_name: str
