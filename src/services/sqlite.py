@@ -60,7 +60,7 @@ class SQLiteDBService:
         Returns a list of dictionaries.
         """
         conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row  # Return rows as dict-like objects
+        conn.row_factory = sqlite3.Row
         c = conn.cursor()
 
         sql = f"SELECT * FROM {table_name} WHERE {group_key} = ?"
