@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI
 from utils.enum import LLMProvider
 
 class LLMService:
-    def __init__(self, model_name: str, api_key: str, provider: LLMProvider | None = LLMProvider.GOOGLE):
+    def __init__(self, model_name: str, api_key: str, provider: LLMProvider | None = LLMProvider.GOOGLE) -> None:
         """
         Initialize an LLM service wrapper that can use either OpenAI or Google Generative AI.
         """
@@ -21,7 +21,7 @@ class LLMService:
 
         self.name = f"{self.provider}:{self.model_name}"
 
-    def generate(self, messages: list[dict], **kwargs):
+    def generate(self, messages: list[dict], **kwargs) -> str:
         """
         Generate a response from the model.
         Args:
@@ -30,10 +30,3 @@ class LLMService:
         """
         response = self.client.invoke(messages, **kwargs)
         return response.content if hasattr(response, "content") else response
-
-
-# Example usage
-# if __name__ == "__main__":
-#     llm = LLMService(model_name="gpt-4-turbo", api_key="your-openai-key", provider="openai")
-#     reply = llm.generate([{"role": "user", "content": "Hello, how are you?"}])
-#     print(reply)

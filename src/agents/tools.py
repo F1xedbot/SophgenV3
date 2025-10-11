@@ -1,7 +1,6 @@
 import inspect
 from typing import List, Callable, Annotated, Union
 from langgraph.prebuilt import InjectedState
-from pydantic import BaseModel
 from schema.agents import InjectionSchema
 from agents.state import InjectorState
 

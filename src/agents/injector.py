@@ -8,7 +8,7 @@ from agents.tools import BaseTools
 
 
 class Injector:
-    def __init__(self, llm: LLMService, tools: BaseTools, context: dict):
+    def __init__(self, llm: LLMService, tools: BaseTools, context: dict) -> None:
         self.llm = llm
         self.tools = tools
         self.state_schema = InjectorState
@@ -49,6 +49,6 @@ class Injector:
     def build_workflow(self) -> CompiledGraph:
         return self.agent.compile()
 
-    def run(self):
+    def run(self) -> None:
         graph = self.build_workflow()
         return graph.invoke()
