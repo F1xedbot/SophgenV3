@@ -4,12 +4,13 @@ import os
 
 def init():
     """
-    Initialize environment and logging.
+    Initialize logging.
     """
-    load_dotenv()
+    # Basic logging config
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     logging.basicConfig(
         level=log_level,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    logging.info("Environment loaded and logging initialized")
+    
+    logging.info("Logging initialized")
