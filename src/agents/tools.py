@@ -3,8 +3,13 @@ from typing import List, Callable, Annotated
 from langgraph.prebuilt import InjectedState
 from schema.agents import InjectionSchema
 from agents.states import InjectorState
+from services.sqlite import SQLiteDBService
+from helpers.pydantic_to_sql import flatten_pydantic
 
 class BaseTools:
+    def __init__(self):
+        self.db = SQLiteDBService()
+
     def get_tools(self) -> List[Callable]:
         """
         Collects callable tool methods from subclasses.
@@ -19,6 +24,10 @@ class BaseTools:
 
 
 class InjectorTools(BaseTools):
+    def __init__(self):
+        super().__init__()
+        self.table_name = "injections"
+
     def add_injection(
         self,
         injections: list[InjectionSchema],
@@ -42,7 +51,10 @@ class InjectorTools(BaseTools):
                 )
                 continue
 
-            state.items.append(inj)
+            injection_data = flatten_pydantic(inj)
+            injection_data["func_name"] = state.func_name
+            self.db.save_data(self.table_name, injection_data)
+
             messages.append(
                 f"Injection for ROI {inj.roi_index} with CWE {inj.cwe_label} added successfully."
             )
