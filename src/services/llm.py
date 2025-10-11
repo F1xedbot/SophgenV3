@@ -1,7 +1,8 @@
 from typing import List, Dict
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
-from config.registry import LLM_REGISTRY, LLMConfig
+from registry.llm import LLM_REGISTRY
+from config.llm import LLMConfig
 from utils.enum import LLMProvider
 
 class LLMService:
