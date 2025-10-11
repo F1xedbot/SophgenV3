@@ -1,0 +1,1 @@
+LOCAL_CWE_CACHE_PATH = "data_src/cwe_data.json"

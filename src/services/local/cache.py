@@ -1,4 +1,4 @@
-from utils.const import LOCAL_CWE_CACHE_PATH
+from config.local import LOCAL_CWE_CACHE_PATH
 import orjson
 import aiofiles
 import os

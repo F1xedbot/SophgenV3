@@ -1,32 +1,44 @@
+from typing import List, Dict
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from config.registry import LLM_REGISTRY, LLMConfig
 from utils.enum import LLMProvider
 
 class LLMService:
-    def __init__(self, model_name: str, api_key: str, provider: LLMProvider | None = LLMProvider.GOOGLE) -> None:
-        """
-        Initialize an LLM service wrapper that can use either OpenAI or Google Generative AI.
-        """
+    """
+    Wrapper around LLM clients (OpenAI / Google) for simplified usage.
+    Automatically finds config by model name.
+    """
+    def __init__(self, model_name: str):
+        self.config: LLMConfig = self._find_config(model_name)
+        self.client = self._init_client()
 
-        self.model_name = model_name
-        self.api_key = api_key
-        self.provider = provider.lower()
+    def _find_config(self, model_name: str) -> LLMConfig:
+        if model_name not in LLM_REGISTRY:
+            raise ValueError(f"LLM config not found for model: {model_name}")
+        return LLM_REGISTRY[model_name]
 
-        if self.provider == LLMProvider.OPENAI:
-            self.client = ChatOpenAI(model=model_name, api_key=api_key)
-        elif self.provider == LLMProvider.GOOGLE:
-            self.client = ChatGoogleGenerativeAI(model=model_name, api_key=api_key)
+    def _init_client(self):
+        if self.config.provider == LLMProvider.OPENAI:
+            return ChatOpenAI(
+                model=self.config.model_name,
+                api_key=self.config.api_key,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+            )
+        elif self.config.provider == LLMProvider.GOOGLE:
+            return ChatGoogleGenerativeAI(
+                model=self.config.model_name,
+                api_key=self.config.api_key,
+                temperature=self.config.temperature,
+                max_output_tokens=self.config.max_tokens,
+            )
         else:
-            raise ValueError(f"Unsupported provider: {provider}")
+            raise ValueError(f"Unsupported provider: {self.config.provider}")
 
-        self.name = f"{self.provider}:{self.model_name}"
-
-    def generate(self, messages: list[dict], **kwargs) -> str:
+    def generate(self, messages: List[Dict], **kwargs) -> str:
         """
-        Generate a response from the model.
-        Args:
-            messages: A list of message dicts (e.g., [{"role": "user", "content": "Hello"}])
-            kwargs: Additional parameters for model call.
+        Simple wrapper to call the LLM.
         """
         response = self.client.invoke(messages, **kwargs)
-        return response.content if hasattr(response, "content") else response
+        return getattr(response, "content", response)
