@@ -1,4 +1,4 @@
-from schema.agents import InjectionSchema, Context
+from schema.agents import Context
 from langgraph.prebuilt.chat_agent_executor import AgentStatePydantic
 
 class InjectorState(AgentStatePydantic):
