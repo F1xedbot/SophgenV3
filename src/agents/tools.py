@@ -45,7 +45,7 @@ class InjectorTools(BaseTools):
         messages = []
 
         for inj in injections:
-            if inj.implementation.original_pattern == inj.implementation.transformed_code:
+            if inj.original_pattern == inj.transformed_code:
                 messages.append(
                     f"ROI {inj.roi_index} ({inj.cwe_label}): No meaningful change; skipped."
                 )
