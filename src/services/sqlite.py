@@ -9,16 +9,17 @@ class SQLiteDBService:
     def __init__(self, db_path: Optional[str] = None):
         from config.db import SQLITEConfig
         self.db_path = db_path or SQLITEConfig.get_db_path()
+        self.table_sqls = SQLITEConfig.get_tables_sql()
 
-    def init_db(self, table_sqls: Optional[list[str]] = None) -> None:
+    def init_db(self) -> None:
         """
         Initialize database and create tables.
         Accepts optional list of CREATE TABLE statements.
         """
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-        if table_sqls:
-            for sql in table_sqls:
+        if self.table_sqls:
+            for sql in self.table_sqls:
                 c.execute(sql)
         conn.commit()
         conn.close()
@@ -44,6 +45,8 @@ class SQLiteDBService:
 
         sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
         c.execute(sql, values)
+
+        print("Hello")
 
         conn.commit()
         conn.close()
