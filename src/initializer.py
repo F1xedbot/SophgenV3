@@ -1,9 +1,10 @@
 import logging
 import os
+from services.sqlite3 import init_db
 
 def init():
     """
-    Initialize logging.
+    Initialize required components.
     """
     # Basic logging config
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -11,5 +12,7 @@ def init():
         level=log_level,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    
     logging.info("Logging initialized")
+
+    init_db()
+    logging.info("Database initialized")
