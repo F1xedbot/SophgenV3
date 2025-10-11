@@ -1,10 +1,11 @@
 import inspect
-from typing import List, Callable, Annotated
+from typing import List, Callable, Annotated, Optional
 from langgraph.prebuilt import InjectedState
 from schema.agents import InjectionSchema
 from agents.states import InjectorState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
+from config.agent import INJECTOR_CONFIG, VALIDATOR_CONFIG
 
 class BaseTools:
     def __init__(self):
@@ -24,9 +25,11 @@ class BaseTools:
 
 
 class InjectorTools(BaseTools):
-    def __init__(self):
+    def __init__(self, config: Optional[dict] | None = INJECTOR_CONFIG):
         super().__init__()
-        self.table_name = "injections"
+        self.config = config
+        self.table_name = self.config["table_name"]
+        self.db = SQLiteDBService()
 
     def add_injection(
         self,
@@ -60,6 +63,16 @@ class InjectorTools(BaseTools):
             )
 
         return "\n".join(messages)
+    
+class ValidatorTools(BaseTools):
+    def __init__(self, config: Optional[dict] | None = VALIDATOR_CONFIG):
+        super().__init__()
+        self.config = config
+        self.table_name = self.config["table_name"]
+        self.injection_table = self.config["injection_table"]
+        self.injection_group_key = self.config["injection_group_key"]
 
-
-
+    def get_injections(self, func_name: str):
+        if not func_name:
+            return self.db.get_data_group(self.injection_table, self.injection_group_key, func_name)
+        return []
