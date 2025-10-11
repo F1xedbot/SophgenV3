@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 class SQLiteDBService:
     """
@@ -46,7 +46,28 @@ class SQLiteDBService:
         sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
         c.execute(sql, values)
 
-        print("Hello")
-
         conn.commit()
         conn.close()
+
+    def get_data_group(
+        self,
+        table_name: str,
+        group_key: str,
+        group_value: Any
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch all rows from `table_name` where `group_key` = `group_value`.
+        Returns a list of dictionaries.
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row  # Return rows as dict-like objects
+        c = conn.cursor()
+
+        sql = f"SELECT * FROM {table_name} WHERE {group_key} = ?"
+        c.execute(sql, (group_value,))
+        rows = c.fetchall()
+
+        result = [dict(row) for row in rows]
+
+        conn.close()
+        return result
