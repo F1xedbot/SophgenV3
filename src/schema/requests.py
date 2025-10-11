@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import List
 
 class InjectorRequest(BaseModel):
     raw_code: str

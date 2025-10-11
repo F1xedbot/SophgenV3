@@ -1,10 +1,10 @@
-from config.local import LOCAL_CWE_CACHE_PATH
 import orjson
 import aiofiles
 import os
 from pathlib import Path
 
-FULL_LOCAL_CWE_CACHE_PATH = Path(__file__).parent / LOCAL_CWE_CACHE_PATH
+PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", Path.cwd()))
+FULL_LOCAL_CWE_CACHE_PATH = PROJECT_ROOT / os.environ['LOCAL_CWE_CACHE_PATH']
 
 async def load_local_cache(file_path: str = FULL_LOCAL_CWE_CACHE_PATH) -> dict:
     """
