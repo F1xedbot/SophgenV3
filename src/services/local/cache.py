@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", Path.cwd()))
-FULL_LOCAL_CWE_CACHE_PATH = PROJECT_ROOT / os.environ['LOCAL_CWE_CACHE_PATH']
+FULL_LOCAL_CWE_CACHE_PATH = PROJECT_ROOT / os.environ['CWE_CACHE_PATH']
 
 async def load_local_cache(file_path: str = FULL_LOCAL_CWE_CACHE_PATH) -> dict:
     """
