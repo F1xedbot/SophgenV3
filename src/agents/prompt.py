@@ -41,8 +41,8 @@ INJECTOR_CONTEXT_PROMPT = """
 Function Code:
 {function_code}
 
-Regions of Interest (ROI):
-{roi}
+Regions of Interest (ROIs):
+{rois}
 (ROIs are sequentially ordered top-to-bottom)
 
 Possible CWE(s):

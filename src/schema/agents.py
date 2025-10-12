@@ -3,7 +3,8 @@ from pydantic import BaseModel, Field
 
 class Context(BaseModel):
     func_name: Optional[str] = None
-    roi: Optional[str] = None
+    rois: Optional[str] = None
+    lines: Optional[str] = None
     cwe_details: Optional[str] = None
     func_code: str
 

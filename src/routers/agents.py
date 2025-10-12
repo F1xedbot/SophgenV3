@@ -26,7 +26,7 @@ async def run_injector(req: InjectorRequest):
         messages=[],
         context=Context(
             func_code=req.func_code,
-            roi=req.roi,
+            rois=req.rois,
             cwe_details=cwe_details
         )
     )

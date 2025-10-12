@@ -16,7 +16,7 @@ class Injector:
             state_schema=self.state_schema,
             prompt=self.build_messages,
         )
-        self.required_keys = ["func_code", "roi", "cwe_details"]
+        self.required_keys = ["func_code", "rois", "cwe_details"]
 
     def build_messages(self, state: InjectorState) -> list[AnyMessage]:
         """Construct system + human messages for the injection reasoning context."""
@@ -25,7 +25,7 @@ class Injector:
             HumanMessage(
                 content=INJECTOR_CONTEXT_PROMPT.format(
                     function_code=state.context.func_code,
-                    roi=state.context.roi,
+                    rois=state.context.rois,
                     cwe_details=state.context.cwe_details
                 )
             ),
