@@ -9,7 +9,7 @@ class Validator:
     def __init__(self, llm: LLMService) -> None:
         self.llm = llm
         self.tools = ValidatorTools()
-        self.required_keys = ["func_code", "func_name"]
+        self.required_keys = ["func_code", "func_name", "lines"]
 
     def build_messages(self) -> list[AnyMessage]:
         all_injections = self.tools.get_injections(self.context.func_name)

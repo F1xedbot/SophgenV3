@@ -16,7 +16,7 @@ class Injector:
             state_schema=self.state_schema,
             prompt=self.build_messages,
         )
-        self.required_keys = ["func_code", "rois", "cwe_details"]
+        self.required_keys = ["func_name", "func_code", "rois", "cwe_details", "lines"]
 
     def build_messages(self, state: InjectorState) -> list[AnyMessage]:
         """Construct system + human messages for the injection reasoning context."""
