@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 from helpers.pydantic_to_sql import pydantic_model_to_create_table_sql
 from schema.agents import InjectionSchema, ValidationSchema
+from schema.base import FunctionMetadataSchema, FunctionRawSchema
 from utils.enum import AgentTable
 
 class SQLITEConfig:
@@ -12,6 +13,17 @@ class SQLITEConfig:
     DB_PATH = (PROJECT_ROOT / os.getenv("SQLITE3_PATH", "data/sophgen.db")).resolve()
 
     EXTRA_COLUMNS = [("func_name", "TEXT", True)]
+    FUNCTION_RAW_SQL = pydantic_model_to_create_table_sql(
+        FunctionRawSchema,
+        table_name="functions",
+        add_id_pk=True
+    )
+
+    FUNCTION_METADATA_SQL = pydantic_model_to_create_table_sql(
+        FunctionMetadataSchema,
+        table_name="functions_metadata",
+        add_id_pk=True
+    )
 
     INJECTIONS_SQL = pydantic_model_to_create_table_sql(
         InjectionSchema,
@@ -29,7 +41,7 @@ class SQLITEConfig:
         add_timestamp=True
     )
 
-    TABLES_SQL = [INJECTIONS_SQL, VALIDATIONS_SQL]
+    TABLES_SQL = [FUNCTION_RAW_SQL, FUNCTION_METADATA_SQL, INJECTIONS_SQL, VALIDATIONS_SQL]
 
     @classmethod
     def get_db_path(cls) -> str:
