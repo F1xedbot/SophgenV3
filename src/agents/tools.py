@@ -46,6 +46,7 @@ class InjectorTools(BaseTools):
             return "No injections provided; nothing added."
 
         messages = []
+        roi_lines = state.context.lines.split('\n')
 
         for inj in injections:
             if inj.original_pattern == inj.transformed_code:
@@ -56,6 +57,7 @@ class InjectorTools(BaseTools):
 
             injection_data = flatten_pydantic(inj)
             injection_data["func_name"] = state.context.func_name
+            injection_data["lines"] = roi_lines[inj.roi_index - 1]
             self.db.save_data(self.table_name, injection_data)
 
             messages.append(
@@ -103,10 +105,13 @@ class ValidatorTools(BaseTools):
         """
         if not validations or not validations.validation_results:
             return False
+        
+        roi_lines = context.lines.split('\n')
 
         for item in validations.validation_results:
             validation_data = flatten_pydantic(item)
             validation_data["func_name"] = context.func_name
+            validation_data["lines"] = roi_lines[item.roi_index - 1]
             self.db.save_data(self.table_name, validation_data)
             
         return True

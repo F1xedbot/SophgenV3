@@ -12,7 +12,7 @@ class SQLITEConfig:
     PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", ".")).resolve()
     DB_PATH = (PROJECT_ROOT / os.getenv("SQLITE3_PATH", "data/sophgen.db")).resolve()
 
-    EXTRA_COLUMNS = [("func_name", "TEXT", True)]
+    EXTRA_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True)]
     FUNCTION_RAW_SQL = pydantic_model_to_create_table_sql(
         FunctionRawSchema,
         table_name="functions",
