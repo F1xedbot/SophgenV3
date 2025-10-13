@@ -11,13 +11,38 @@ class Context(BaseModel):
 class ValidationSchema(BaseModel):
     roi_index: int = Field(..., description="1-based index of the ROI being validated.")
     cwe_label: str = Field(..., description="CWE-ID from the injection.")
-    is_valid: bool = Field(..., description="True if validation passed, False otherwise.")
-    effectiveness: int = Field(..., description="Effectiveness score from 1 to 10.", ge=1, le=10)
-    plausibility: int = Field(..., description="Plausibility score from 1 to 10.", ge=1, le=10)
-    limited_to_roi: bool = Field(..., description="Whether the validation is limited to the ROI.")
-    exploitability: str = Field(..., description="Brief assessment of how exploitable the vulnerability is.")
-    naturalness: str = Field(..., description="Brief assessment of how natural the modified code looks.")
-    maintains_functionality: str = Field(...,description="Brief assessment of whether the injection breaks functionality or compilation.")
+    is_valid: bool = Field(
+        ...,
+        description="True if the injection correctly and plausibly introduces the specified CWE flaw. False otherwise."
+    )
+    effectiveness: int = Field(
+        ...,
+        ge=1,
+        le=10,
+        description="Score (1-10) rating how realistically exploitable the new vulnerability is."
+    )
+    plausibility: int = Field(
+        ...,
+        ge=1,
+        le=10,
+        description="Score (1-10) rating how natural the code looks. A high score means it resembles a common developer mistake."
+    )
+    limited_to_roi: bool = Field(
+        ...,
+        description="True if the code modification was contained strictly within the ROI's boundaries."
+    )
+    exploitability: str = Field(
+        ...,
+        description="The concise textual rationale that justifies the 'effectiveness' score."
+    )
+    naturalness: str = Field(
+        ...,
+        description="The concise textual rationale that justifies the 'plausibility' score."
+    )
+    maintains_functionality: str = Field(
+        ...,
+        description="Assesses if the change avoids obvious compile-time errors or crashes on benign, non-malicious inputs. A good, subtle injection should preserve this superficial functionality to hide the flaw."
+    )
 
 class InjectionSchema(BaseModel):
     roi_index: int = Field(..., description="1-based index of the ROI being modified.")
