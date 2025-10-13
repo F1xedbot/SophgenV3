@@ -1,5 +1,5 @@
 from typing import Optional
-from utils.enum import LLMProvider
+from utils.enums import LLMProvider
 from manager.llm import LLMKeyManager
 
 class LLMConfig:

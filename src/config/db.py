@@ -3,7 +3,7 @@ import os
 from helpers.pydantic_to_sql import pydantic_model_to_create_table_sql
 from schema.agents import InjectionSchema, ValidationSchema
 from schema.base import FunctionMetadataSchema, FunctionRawSchema
-from utils.enum import AgentTable
+from utils.enums import AgentTable
 
 class SQLITEConfig:
     """

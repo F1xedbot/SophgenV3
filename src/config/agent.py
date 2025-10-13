@@ -1,4 +1,4 @@
-from utils.enum import AgentTable
+from utils.enums import AgentTable
 
 INJECTOR_TOOL_CONFIG = {
     "table_name": AgentTable.INJECTOR

@@ -1,7 +1,7 @@
 import os
 from config.llm import LLMConfig
 from manager.llm import LLMKeyManager
-from utils.enum import LLMProvider, LLMModels
+from utils.enums import LLMProvider, LLMModels
 from types import MappingProxyType
 
 def load_keys(prefix: str) -> list[str]:

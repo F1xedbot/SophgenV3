@@ -3,7 +3,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from registry.llm import LLM_REGISTRY
 from config.llm import LLMConfig
-from utils.enum import LLMProvider
+from utils.enums import LLMProvider
 
 class LLMService:
     """

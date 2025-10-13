@@ -1,6 +1,6 @@
 from fastapi import HTTPException, APIRouter
 
-from utils.enum import LLMModels
+from utils.enums import LLMModels
 from services.llm import LLMService
 from agents.injector import Injector
 from agents.tools import InjectorTools

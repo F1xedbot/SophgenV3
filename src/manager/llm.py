@@ -1,5 +1,5 @@
 from typing import Optional, List
-from utils.enum import LLMProvider
+from utils.enums import LLMProvider
 import logging
 
 logger = logging.getLogger(__name__)
