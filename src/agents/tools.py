@@ -31,23 +31,19 @@ class InjectorTools(BaseTools):
         self.table_name = self.config["table_name"]
         self.db = SQLiteDBService()
 
-    def add_injections(
+    def add_injection(
         self,
-        injections: InjectionSchema | list[InjectionSchema],
-        state: Annotated[InjectorState, InjectedState],
+        injections: list[InjectionSchema],
+        state: Annotated[InjectorState, InjectedState]
     ) -> str:
         """
-        Add one or more CWE injections.
+        Add CWE injections from a list of InjectionSchema objects.
 
-        Accepts a single InjectionSchema or a list.
         Skips injections where transformed_code == original_pattern.
         Returns a message per injection (ROI + CWE + status).
         """
-        # Normalize to list
         if not injections:
             return "No injections provided; nothing added."
-        if isinstance(injections, InjectionSchema):
-            injections = [injections]
 
         messages = []
         roi_lines = state.context.lines.split('\n')
