@@ -4,19 +4,27 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
 from agents.states import InjectorState
 from agents.tools import BaseTools
+from agents.mixins import AgentRetryMixin
 
-class Injector:
+class Injector(AgentRetryMixin):
     def __init__(self, llm: LLMService, tools: BaseTools) -> None:
         self.llm = llm
         self.tools = tools
         self.state_schema = InjectorState
-        self.agent = create_react_agent(
+        self.agent = self._build_agent()
+        self.required_keys = ["func_name", "func_code", "rois", "cwe_details", "lines"]
+
+    def _build_agent(self):
+        return create_react_agent(
             model=self.llm.client,
             tools=self.tools.get_tools(),
             state_schema=self.state_schema,
             prompt=self.build_messages,
         )
-        self.required_keys = ["func_name", "func_code", "rois", "cwe_details", "lines"]
+    
+    def _rebuild_client(self, new_key: str):
+        self.llm.client = self.llm._init_client(new_key)
+        self.agent = self._build_agent()
 
     def build_messages(self, state: InjectorState) -> list[AnyMessage]:
         """Construct system + human messages for the injection reasoning context."""
@@ -51,8 +59,17 @@ class Injector:
         try:
             state_data = state.model_dump() if hasattr(state, "model_dump") else dict(state)
             initial_state = self.state_schema(**state_data)
-            graph = self.agent
-            result = await graph.ainvoke(initial_state)
+
+            provider = self.llm.config.provider
+            key_manager = self.llm.config.key_manager
+
+            result = await self.safe_invoke(
+                invoke_fn=self.agent.ainvoke,
+                provider=provider,
+                key_manager=key_manager,
+                rebuild_fn=self._rebuild_client,
+                input=initial_state,
+            )
             return result
         except Exception as e:
             raise RuntimeError(f"Agent run failed: {e}") from e
