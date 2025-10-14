@@ -43,6 +43,14 @@ class ValidationSchema(BaseModel):
         ...,
         description="Assesses if the change avoids obvious compile-time errors or crashes on benign, non-malicious inputs. A good, subtle injection should preserve this superficial functionality to hide the flaw."
     )
+    feedback: str = Field(
+        ...,
+        description="Concise reviewer verdict and reasoning (1–2 short sentences) referencing relevant ROI lines/nodes."
+    )
+    suggested_improvements: str = Field(
+        ...,
+        description="Specific, prioritized, actionable fixes or alternative injections (minimal code edits or tests) to try."
+    )
 
 class InjectionSchema(BaseModel):
     roi_index: int = Field(..., description="1-based index of the ROI being modified.")
