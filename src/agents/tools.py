@@ -5,7 +5,9 @@ from schema.agents import InjectionSchema, ValidationOuput, Context
 from agents.states import InjectorState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
-from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG
+from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG
+from utils.decorators import exclude_tool
+from langchain_tavily import TavilySearch
 
 class BaseTools:
     def __init__(self):
@@ -17,11 +19,20 @@ class BaseTools:
         """
         tools = []
         for name, func in inspect.getmembers(self, predicate=inspect.ismethod):
-            # Skip private methods and BaseTools methods
-            if name.startswith("_") or func.__func__ in BaseTools.__dict__.values():
+            # Skip private methods, BaseTools methods, and excluded decorators
+            if (
+                name.startswith("_")
+                or func.__func__ in BaseTools.__dict__.values()
+                or getattr(func.__func__, "_exclude_tool", False)
+            ):
                 continue
             tools.append(func)
         return tools
+    
+class ResearcherTools(BaseTools):
+    def __init__(self, config: Optional[dict] | None = RESEARCHER_TOOL_CONFIG):
+        super().__init__()
+        self.engine = TavilySearch(max_results=config["max_results"])
 
 
 class InjectorTools(BaseTools):
@@ -75,6 +86,7 @@ class ValidatorTools(BaseTools):
         self.injection_group_key = self.config["injection_group_key"]
         self.excluded_keys = self.config['excluded_keys']
 
+    @exclude_tool
     def get_injections(self, func_name: str) -> dict:
         """
         Retrieve all injections for a given function name,
@@ -99,6 +111,7 @@ class ValidatorTools(BaseTools):
 
         return filtered
     
+    @exclude_tool
     def save_validations(self, validations: ValidationOuput, context: Context) -> bool:
         """
         Save all validation results from ValidationOuput to the database.
