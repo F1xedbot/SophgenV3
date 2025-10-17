@@ -1,5 +1,4 @@
-from schema.agents import Context, ResearcherSchema
-from typing import Optional
+from schema.agents import Context
 from langgraph.prebuilt.chat_agent_executor import AgentStatePydantic
 
 class InjectorState(AgentStatePydantic):
@@ -7,4 +6,3 @@ class InjectorState(AgentStatePydantic):
 
 class ResearcherState(AgentStatePydantic):
     cwe_id: str
-    structured_response: Optional[ResearcherSchema] = None
