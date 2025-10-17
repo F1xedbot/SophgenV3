@@ -27,7 +27,6 @@ class Injector(AgentRetryMixin):
         self.agent = self._build_agent()
 
     def build_messages(self, state: InjectorState) -> list[AnyMessage]:
-        """Construct system + human messages for the injection reasoning context."""
         messages = [
             SystemMessage(content=INJECTOR_PROMPT),
             HumanMessage(
