@@ -8,6 +8,9 @@ from helpers.pydantic_to_sql import flatten_pydantic
 from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG
 from utils.decorators import exclude_tool
 from langchain_tavily import TavilySearch
+import logging
+
+logger = logging.getLogger(__name__)
 
 class BaseTools:
     def __init__(self):
@@ -35,16 +38,21 @@ class ResearcherTools(BaseTools):
         self.engine = TavilySearch(max_results=config["max_results"])
         self.table_name = config["table_name"]
 
-    def save_cwe(
-        self,
-        cwe_info: ResearcherSchema
-    ) -> bool:
-        if not cwe_info:
+    def save_cwe(self, cwe_info: Optional[ResearcherSchema]) -> bool:
+        """
+        Save a CWE entry (from ResearcherSchema) into the database.
+        Returns True on success, False otherwise.
+        """
+        if cwe_info is None:
             return False
-        data = flatten_pydantic(cwe_info)
-        self.db.save_data(self.table_name, data)
-        return True
 
+        try:
+            data = flatten_pydantic(cwe_info)
+            self.db.save_data(self.table_name, data)
+            return True
+        except Exception as e:
+            logging.exception(f"Failed to save CWE: {e}")
+            return False
 
 class InjectorTools(BaseTools):
     def __init__(self, config: Optional[dict] | None = INJECTOR_TOOL_CONFIG):
@@ -126,17 +134,19 @@ class ValidatorTools(BaseTools):
     def save_validations(self, validations: ValidationOuput, context: Context) -> bool:
         """
         Save all validation results from ValidationOuput to the database.
+        Returns True on success, False otherwise.
         """
         if not validations or not validations.validation_results:
             return False
         
-        roi_lines = context.lines.split('\n')
-
-        for item in validations.validation_results:
-            validation_data = flatten_pydantic(item)
-            validation_data["func_name"] = context.func_name
-            validation_data["lines"] = roi_lines[item.roi_index - 1]
-            self.db.save_data(self.table_name, validation_data)
-            
-        return True
-
+        try:
+            roi_lines = context.lines.split('\n')
+            for item in validations.validation_results:
+                validation_data = flatten_pydantic(item)
+                validation_data["func_name"] = context.func_name
+                validation_data["lines"] = roi_lines[item.roi_index - 1]
+                self.db.save_data(self.table_name, validation_data)
+            return True
+        except Exception as e:
+            logging.exception(f"Failed to save validations: {e}")
+            return False
