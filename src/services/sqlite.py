@@ -78,3 +78,27 @@ class SQLiteDBService:
             async with db.execute(sql, keys_list) as cursor:
                 rows = await cursor.fetchall()
                 return [dict(row) for row in rows]
+            
+    async def count_data_by_key(
+        self, table_name: str, key_field: str, key_value: Any
+    ) -> int:
+        """
+        Count rows where key_field equals the given key_value.
+
+        Returns:
+            Number of matching rows.
+        """
+        if key_value is None:
+            return 0
+
+        sql = f"SELECT COUNT(*) as count FROM {table_name} WHERE {key_field} = ?"
+
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("PRAGMA journal_mode=WAL;")
+            await db.execute("PRAGMA synchronous = NORMAL;")
+            db.row_factory = aiosqlite.Row
+
+            async with db.execute(sql, (key_value,)) as cursor:
+                row = await cursor.fetchone()
+                return row["count"] if row else 0
+
