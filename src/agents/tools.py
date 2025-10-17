@@ -6,7 +6,7 @@ from agents.states import InjectorState, ResearcherState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
 from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG
-from utils.decorators import exclude_tool
+from utils.decorators import exclude_tool, critical_tool
 from langchain_tavily import TavilySearch
 import logging
 from services.local.cache import read_cache, update_cache
@@ -32,6 +32,17 @@ class BaseTools:
                 continue
             tools.append(func)
         return tools
+
+    def get_critical_tools(self) -> List[Callable]:
+        """
+        Collects callable critical tools from subclasses.
+        """
+        tools = []
+        for _, func in inspect.getmembers(self, predicate=inspect.ismethod):
+            if (getattr(func.__func__, "_critical_tool", False)):
+                tools.append(func.__name__)
+        return tools
+
     
 class ResearcherTools(BaseTools):
     def __init__(self, config: Optional[dict] | None = RESEARCHER_TOOL_CONFIG):
@@ -65,7 +76,8 @@ class ResearcherTools(BaseTools):
             return summary_text
         except Exception as e:
             return f"[Search error: {e}]"
-
+        
+    @critical_tool
     async def save_cwe(self, cwe_info: ResearcherSchema) -> bool:
         """
         Save a CWE entry (from ResearcherSchema) into the database.
@@ -103,6 +115,7 @@ class InjectorTools(BaseTools):
         self.table_name = self.config["table_name"]
         self.db = SQLiteDBService()
 
+    @critical_tool
     async def add_injection(
         self,
         injections: list[InjectionSchema],
