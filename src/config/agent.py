@@ -10,3 +10,8 @@ VALIDATOR_TOOL_CONFIG = {
     "injection_table": AgentTable.INJECTOR,
     "excluded_keys": ["id", "func_name", "timestamp"]
 }
+
+RESEARCHER_TOOL_CONFIG = {
+    "table_name" : AgentTable.RESEARCHER,
+    "max_results": 5
+}
