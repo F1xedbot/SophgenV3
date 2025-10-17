@@ -2,13 +2,14 @@ import inspect
 from typing import List, Callable, Annotated, Optional
 from langgraph.prebuilt import InjectedState
 from schema.agents import InjectionSchema, ValidationOuput, Context, ResearcherSchema
-from agents.states import InjectorState
+from agents.states import InjectorState, ResearcherState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
 from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG
 from utils.decorators import exclude_tool
 from langchain_tavily import TavilySearch
 import logging
+from services.local.cache import read_cache, update_cache
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,32 @@ class ResearcherTools(BaseTools):
         super().__init__()
         self.engine = TavilySearch(max_results=config["max_results"])
         self.table_name = config["table_name"]
+
+    async def web_search(self, query: str, state: Annotated[ResearcherState, InjectedState]) -> str:
+        """Perform a web search and return a readable summary of results."""
+
+        cached_result = await read_cache(state.cwe_id)
+        if cached_result:
+            return cached_result["summary"]
+
+        try:
+            result = self.engine.ainvoke({"query": query})
+            results = result.get("results", [])
+            if not results:
+                return "No relevant search results found."
+
+            summary = []
+            for r in results:
+                title = r.get("title", "")
+                url = r.get("url", "")
+                snippet = r.get("content", "")
+                summary.append(f"{title}\n{url}\n{snippet}\n")
+
+            summary_text = "\n".join(summary)
+            await update_cache(state.cwe_id, {"summary": summary_text, "query": query})
+            return summary_text
+        except Exception as e:
+            return f"[Search error: {e}]"
 
     async def save_cwe(self, cwe_info: ResearcherSchema) -> bool:
         """

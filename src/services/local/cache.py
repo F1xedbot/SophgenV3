@@ -39,7 +39,7 @@ async def update_cache(key: str, value: dict, file_path: str = FULL_LOCAL_CWE_CA
     Updates the local cache.
     """
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    local_cache = load_local_cache(file_path)
+    local_cache = await load_local_cache(file_path)
     local_cache[key] = value
     try:
         async with aiofiles.open(file_path, "wb") as f:

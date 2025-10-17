@@ -14,10 +14,9 @@ class Researcher(AgentRetryMixin):
         self.agent = self._build_agent()
 
     def _build_agent(self):
-        tools = [*self.tools.get_tools(), self.tools.engine]
         return create_react_agent(
             model=self.llm.client,
-            tools=tools,
+            tools=self.tools.get_tools(),
             state_schema=self.state_schema,
             prompt=self.build_messages,
         )
