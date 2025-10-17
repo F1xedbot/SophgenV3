@@ -52,10 +52,17 @@ class SQLiteDBService:
         await self.db.commit()
 
     async def get_data_group(
-        self, table_name: str, group_key: str, group_value: Any
+        self, table_name: str, group_key: str | None = None, group_value: Any = None
     ) -> List[Dict[str, Any]]:
-        """Fetch rows where group_key = group_value using shared connection."""
+        """Fetch rows optionally filtered by group_key = group_value."""
         await self.connect()
+        
+        if group_key is None or group_value is None:
+            sql = f"SELECT * FROM {table_name}"
+            async with self.db.execute(sql) as cursor:
+                rows = await cursor.fetchall()
+                return [dict(row) for row in rows]
+
         sql = f"SELECT * FROM {table_name} WHERE {group_key} = ?"
         async with self.db.execute(sql, (group_value,)) as cursor:
             rows = await cursor.fetchall()
