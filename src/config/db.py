@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 from helpers.pydantic_to_sql import pydantic_model_to_create_table_sql
-from schema.agents import InjectionSchema, ValidationSchema
+from schema.agents import InjectionSchema, ValidationSchema, ResearcherSchema
 from schema.base import FunctionMetadataSchema, FunctionRawSchema
 from utils.enums import AgentTable
 
@@ -16,13 +16,15 @@ class SQLITEConfig:
     FUNCTION_RAW_SQL = pydantic_model_to_create_table_sql(
         FunctionRawSchema,
         table_name="functions",
-        add_id_pk=True
+        add_id_pk=True,
+        add_timestamp=False
     )
 
     FUNCTION_METADATA_SQL = pydantic_model_to_create_table_sql(
         FunctionMetadataSchema,
         table_name="functions_metadata",
-        add_id_pk=True
+        add_id_pk=True,
+        add_timestamp=False
     )
 
     INJECTIONS_SQL = pydantic_model_to_create_table_sql(
@@ -41,7 +43,14 @@ class SQLITEConfig:
         add_timestamp=True
     )
 
-    TABLES_SQL = [FUNCTION_RAW_SQL, FUNCTION_METADATA_SQL, INJECTIONS_SQL, VALIDATIONS_SQL]
+    RESEARCHER_SQL = pydantic_model_to_create_table_sql(
+        ResearcherSchema,
+        table_name=AgentTable.RESEARCHER,
+        add_id_pk=True,
+        add_timestamp=True,
+    )
+
+    TABLES_SQL = [FUNCTION_RAW_SQL, FUNCTION_METADATA_SQL, INJECTIONS_SQL, VALIDATIONS_SQL, RESEARCHER_SQL]
 
     @classmethod
     def get_db_path(cls) -> str:
