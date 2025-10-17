@@ -8,7 +8,6 @@ from helpers.pydantic_to_sql import flatten_pydantic
 from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG
 from utils.decorators import exclude_tool
 from langchain_tavily import TavilySearch
-from pydantic import parse_raw_as
 import logging
 from services.local.cache import read_cache, update_cache
 
@@ -67,7 +66,7 @@ class ResearcherTools(BaseTools):
         except Exception as e:
             return f"[Search error: {e}]"
 
-    async def save_cwe(self, cwe_info: ResearcherSchema | str | dict) -> bool:
+    async def save_cwe(self, cwe_info: ResearcherSchema) -> bool:
         """
         Save a CWE entry (from ResearcherSchema) into the database.
         Returns True on success, False otherwise.
@@ -77,19 +76,20 @@ class ResearcherTools(BaseTools):
         
         try:
             if isinstance(cwe_info, str):
-                cwe_obj = parse_raw_as(ResearcherSchema, cwe_info)
+                cwe_obj = ResearcherSchema.model_validate_json(cwe_info)    
             elif isinstance(cwe_info, dict):
                 cwe_obj = ResearcherSchema(**cwe_info)
             else:
-                cwe_obj = cwe_info  # probably already a ResearcherSchema
+                cwe_obj = cwe_info
+
         except Exception as e:
             logging.exception(f"Failed to parse cwe_info: {e}")
             return False
         
-        logger.info(f"Calling `save_cwe` on {cwe_info.cwe_id}")
+        logger.info(f"Calling `save_cwe` on {cwe_obj.cwe_id}")
 
         try:
-            data = flatten_pydantic(cwe_info)
+            data = flatten_pydantic(cwe_obj)
             await self.db.save_data(self.table_name, data)
             return True
         except Exception as e:
