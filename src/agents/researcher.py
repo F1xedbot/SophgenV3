@@ -1,16 +1,20 @@
-from services.llm import LLMService
+import logging
 from agents.prompt import RESEARCHER_PROMPT
+from services.llm import LLMService
 from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage, AIMessage
 from agents.states import ResearcherState
 from agents.tools import BaseTools
 from agents.mixins import AgentRetryMixin
 
+logger = logging.getLogger(__name__)
+
 class Researcher(AgentRetryMixin):
-    def __init__(self, llm: LLMService, tools: BaseTools) -> None:
+    def __init__(self, llm: LLMService, tools: BaseTools, max_retries: int = 3) -> None:
         self.llm = llm
         self.tools = tools
         self.state_schema = ResearcherState
+        self.max_retries = max_retries
         self.agent = self._build_agent()
 
     def _build_agent(self):
@@ -33,25 +37,54 @@ class Researcher(AgentRetryMixin):
         ]
         return messages
     
+    def _was_save_cwe_called(self, messages: list[AnyMessage]) -> bool:
+        """Checks if the 'save_cwe' tool was called in the last agent turn."""
+        for message in reversed(messages):
+            if isinstance(message, AIMessage) and message.tool_calls:
+                for tool_call in message.tool_calls:
+                    if tool_call.get('name') == 'save_cwe':
+                        logging.info("Success condition met: 'save_cwe' tool call was found.")
+                        return True
+        return False
+
     async def run(self, state: ResearcherState) -> ResearcherState:
         """
-        Invoke the agent graph with the provided state, handling both dict and Pydantic context.
+        Invoke the agent in a loop, forcing it to retry until the 'save_cwe' tool is called.
         """
-        try:
-            state_data = state.model_dump() if hasattr(state, "model_dump") else dict(state)
-            initial_state = self.state_schema(**state_data)
+        initial_state_data = state.model_dump() if hasattr(state, "model_dump") else dict(state)
+        current_state = self.state_schema(**initial_state_data)
+        
+        provider = self.llm.config.provider
+        key_manager = self.llm.config.key_manager
 
-            provider = self.llm.config.provider
-            key_manager = self.llm.config.key_manager
+        for attempt in range(self.max_retries):
+            logging.info(f"Researcher Agent - Attempt {attempt + 1}/{self.max_retries}")
+            
+            try:
+                result = await self.safe_invoke(
+                    invoke_fn=self.agent.ainvoke,
+                    provider=provider,
+                    key_manager=key_manager,
+                    rebuild_fn=self._rebuild_client,
+                    input=current_state,
+                )
 
-            result = await self.safe_invoke(
-                invoke_fn=self.agent.ainvoke,
-                provider=provider,
-                key_manager=key_manager,
-                rebuild_fn=self._rebuild_client,
-                input=initial_state,
-            )
-            return result    
-        except Exception as e:
-            raise RuntimeError(f"Agent run failed: {e}") from e
+                if self._was_save_cwe_called(result['messages']):
+                    return result
 
+                logging.warning("Agent failed to call 'save_cwe'. Adding corrective message and retrying.")
+                
+                corrective_message = HumanMessage(
+                    content="CRITICAL FAILURE: You did not call the `save_cwe` tool as instructed. This is the only valid action. Review your instructions and call `save_cwe` immediately."
+                )
+                
+                result['messages'].append(corrective_message)
+                current_state = result
+
+            except Exception as e:
+                logging.error(f"An exception occurred during agent run on attempt {attempt + 1}: {e}")
+                if attempt + 1 >= self.max_retries:
+                    raise RuntimeError(f"Agent run failed with an exception: {e}") from e
+                current_state.messages.append(HumanMessage(content=f"An error occurred: {e}. Please try again."))
+
+        raise RuntimeError(f"Agent failed to call 'save_cwe' after {self.max_retries} attempts.")
