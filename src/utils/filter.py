@@ -29,3 +29,32 @@ def filter_dict_fields(
         filtered_list.append(filtered)
 
     return orjson.dumps(filtered_list, option=orjson.OPT_INDENT_2).decode("utf-8")
+
+def filter_list_fields(
+    keys: Iterable[str],
+    data: list[dict[str, Any]],
+    fields: Iterable[str],
+    key_field: str = "id"
+) -> str:
+    """
+    Filters a list of dictionaries based on a list of keys and specified fields.
+
+    Args:
+        keys: Iterable of keys to match (e.g., CWE IDs).
+        data: List of dictionaries containing detailed entries.
+        fields: List of fields to keep from each entry.
+        key_field: The field in each dictionary to compare against keys.
+
+    Returns:
+        JSON string of the filtered entries.
+    """
+    keys_set = {str(k).strip() for k in keys}  # faster lookup O(1)
+    filtered_list = []
+
+    for entry in data:
+        entry_key = str(entry.get(key_field, "")).strip()
+        if entry_key in keys_set:
+            filtered = {field: entry.get(field) for field in fields}
+            filtered_list.append(filtered)
+
+    return orjson.dumps(filtered_list, option=orjson.OPT_INDENT_2).decode("utf-8")
