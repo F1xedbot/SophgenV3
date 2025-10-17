@@ -47,7 +47,7 @@ class ResearcherTools(BaseTools):
             return cached_result["summary"]
 
         try:
-            result = self.engine.ainvoke({"query": query})
+            result = await self.engine.ainvoke({"query": query})
             results = result.get("results", [])
             if not results:
                 return "No relevant search results found."
