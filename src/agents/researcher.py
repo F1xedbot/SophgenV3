@@ -6,11 +6,12 @@ from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage, AIM
 from agents.states import ResearcherState
 from agents.tools import BaseTools
 from agents.mixins import AgentRetryMixin
+from utils.const import MAX_AGENT_RETRIES
 
 logger = logging.getLogger(__name__)
 
 class Researcher(AgentRetryMixin):
-    def __init__(self, llm: LLMService, tools: BaseTools, max_retries: int = 3) -> None:
+    def __init__(self, llm: LLMService, tools: BaseTools, max_retries: int = MAX_AGENT_RETRIES) -> None:
         self.llm = llm
         self.tools = tools
         self.state_schema = ResearcherState
@@ -34,52 +35,30 @@ class Researcher(AgentRetryMixin):
         Build messages for the agent, ensuring system/human messages are not duplicated
         when the agent is retried after a corrective instruction.
         """
-        messages = list(state.messages)  # start with existing messages
+        messages = list(state.messages)
 
         # Only add system message if not already present
         if not any(isinstance(m, SystemMessage) for m in messages):
             messages.insert(0, SystemMessage(content=RESEARCHER_PROMPT))
 
-        # Only add initial HumanMessage with cwe_id if not present
+        # Only add initial HumanMessage if not present
         if not any(isinstance(m, HumanMessage) and str(state.cwe_id) in m.content for m in messages):
             messages.insert(1, HumanMessage(content=f"CWE-ID: {str(state.cwe_id)}"))
 
         return messages
 
-    
-    def _was_save_cwe_called(self, messages: list[AnyMessage]) -> bool:
-        """
-        Checks if the 'save_cwe' tool was called with non-empty arguments
-        in the last agent turn.
-        """
-        for message in reversed(messages):
-            if isinstance(message, AIMessage) and message.tool_calls:
-                for tool_call in message.tool_calls:
-                    if tool_call.get("name") == "save_cwe":
-                        print(tool_call)
-                        args = tool_call.get("args") or {}
-                        if args:  # True only if args is a non-empty dict
-                            logging.info(
-                                "Success condition met: 'save_cwe' tool call with arguments found."
-                            )
-                            return True
-        return False
-
-
     async def run(self, state: ResearcherState) -> ResearcherState:
         """
-        Invoke the agent in a loop, forcing it to retry until the 'save_cwe' tool is called.
+        Invoke the agent in a loop, forcing it to retry until all critical tools are called.
         """
         initial_state_data = state.model_dump() if hasattr(state, "model_dump") else dict(state)
         current_state = self.state_schema(**initial_state_data)
 
-        current_state.messages = []
-        
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
 
         for attempt in range(self.max_retries):
-            logging.info(f"Researcher Agent - Attempt {attempt + 1}/{self.max_retries}")
+            logger.info(f"Researcher Agent - Attempt {attempt + 1}/{self.max_retries}")
             
             try:
                 result = await self.safe_invoke(
@@ -89,23 +68,15 @@ class Researcher(AgentRetryMixin):
                     rebuild_fn=self._rebuild_client,
                     input=current_state,
                 )
-
-                if self._was_save_cwe_called(result['messages']):
+                status, corrective_message = self.all_critical_tools_called(result['messages'], self.tools.get_critical_tools())
+                if status:
                     return result
-
-                logging.warning("Agent failed to call 'save_cwe'. Adding corrective message and retrying.")
-                
-                corrective_message = HumanMessage(
-                    content="CRITICAL FAILURE: You did not call the `save_cwe` tool as instructed. This is the only valid action. Review your instructions and call `save_cwe` immediately."
-                )
-                
+                logger.warning("Agent failed to call any critical tools. Adding corrective message and retrying.")
                 result['messages'].append(corrective_message)
                 current_state = result
 
             except Exception as e:
-                logging.error(f"An exception occurred during agent run on attempt {attempt + 1}: {e}")
-                if attempt + 1 >= self.max_retries:
-                    raise RuntimeError(f"Agent run failed with an exception: {e}") from e
-                current_state.messages.append(HumanMessage(content=f"An error occurred: {e}. Please try again."))
-
-        raise RuntimeError(f"Agent failed to call 'save_cwe' after {self.max_retries} attempts.")
+                logger.error(f"An exception occurred during agent run on attempt {attempt + 1}: {e}")
+                raise RuntimeError(f"Agent run failed with an exception: {e}") from e
+            
+        raise RuntimeError(f"Agent failed to call any critical tools after {self.max_retries} attempts.")
