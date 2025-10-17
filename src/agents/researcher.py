@@ -2,7 +2,7 @@ import logging
 from agents.prompt import RESEARCHER_PROMPT
 from services.llm import LLMService
 from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
 from agents.states import ResearcherState
 from agents.tools import BaseTools
 from agents.mixins import AgentRetryMixin
