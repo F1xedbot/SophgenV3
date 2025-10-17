@@ -28,7 +28,7 @@ class AgentRetryMixin(ABC):
         """Reinitialize the underlying LLM client with a new key."""
         raise NotImplementedError
     
-    def all_critical_tools_called(messages: list[AnyMessage], tool_names: list[str]) -> tuple[bool, Optional[HumanMessage]]:
+    def all_critical_tools_called(self, messages: list[AnyMessage], tool_names: list[str]) -> tuple[bool, Optional[HumanMessage]]:
         """
         Checks if all specified critical tools were called with non-empty arguments
         in the last agent turn. Returns a tuple of (success, corrective_message).
