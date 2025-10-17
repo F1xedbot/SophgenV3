@@ -38,13 +38,15 @@ class ResearcherTools(BaseTools):
         self.engine = TavilySearch(max_results=config["max_results"])
         self.table_name = config["table_name"]
 
-    async def save_cwe(self, cwe_info: Optional[ResearcherSchema]) -> bool:
+    async def save_cwe(self, cwe_info: ResearcherSchema) -> bool:
         """
         Save a CWE entry (from ResearcherSchema) into the database.
         Returns True on success, False otherwise.
         """
-        if cwe_info is None:
+        if not cwe_info:
             return False
+        
+        logger.info(f"Calling `save_cwe` on {cwe_info.cwe_id}")
 
         try:
             data = flatten_pydantic(cwe_info)
