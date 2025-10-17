@@ -38,14 +38,22 @@ class Researcher(AgentRetryMixin):
         return messages
     
     def _was_save_cwe_called(self, messages: list[AnyMessage]) -> bool:
-        """Checks if the 'save_cwe' tool was called in the last agent turn."""
+        """
+        Checks if the 'save_cwe' tool was called with non-empty arguments
+        in the last agent turn.
+        """
         for message in reversed(messages):
             if isinstance(message, AIMessage) and message.tool_calls:
                 for tool_call in message.tool_calls:
-                    if tool_call.get('name') == 'save_cwe':
-                        logging.info("Success condition met: 'save_cwe' tool call was found.")
-                        return True
+                    if tool_call.get("name") == "save_cwe":
+                        args = tool_call.get("args") or {}
+                        if args:  # True only if args is a non-empty dict
+                            logging.info(
+                                "Success condition met: 'save_cwe' tool call with arguments found."
+                            )
+                            return True
         return False
+
 
     async def run(self, state: ResearcherState) -> ResearcherState:
         """
