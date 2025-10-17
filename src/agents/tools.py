@@ -38,13 +38,16 @@ class ResearcherTools(BaseTools):
         super().__init__()
         self.engine = TavilySearch(max_results=config["max_results"])
         self.table_name = config["table_name"]
+        self.fresh_cache = config["fresh_cache"]
 
     async def web_search(self, query: str, state: Annotated[ResearcherState, InjectedState]) -> str:
         """Perform a web search and return a readable summary of results."""
 
-        cached_result = await read_cache(state.cwe_id)
-        if cached_result:
-            return cached_result["summary"]
+        if not self.fresh_cache:
+            cached_result = await read_cache(state.cwe_id)
+            if cached_result:
+                return cached_result.get("summary", "")
+
 
         try:
             result = await self.engine.ainvoke({"query": query})

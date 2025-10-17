@@ -13,5 +13,6 @@ VALIDATOR_TOOL_CONFIG = {
 
 RESEARCHER_TOOL_CONFIG = {
     "table_name" : AgentTable.RESEARCHER,
-    "max_results": 5
+    "max_results": 5,
+    "fresh_cache": False # <-- set this to True if you want the researcher to run on a fresh cache
 }
