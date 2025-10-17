@@ -20,6 +20,7 @@ class ResearcherSchema(BaseModel):
 class ValidationSchema(BaseModel):
     roi_index: int = Field(..., description="1-based index of the ROI being validated.")
     cwe_label: str = Field(..., description="CWE-ID from the injection.")
+    ref_hash: str = Field(..., description="Unique hash of the injection")
     is_valid: bool = Field(
         ...,
         description="True if the injection correctly and plausibly introduces the specified CWE flaw. False otherwise."
@@ -73,3 +74,11 @@ class InjectionSchema(BaseModel):
                             
 class ValidationOuput(BaseModel):
     validation_results: list[ValidationSchema]
+
+class CondenserSchema(BaseModel):
+    cwe_label: str = Field(..., description="CWE-ID.")
+    works_text: str = Field(..., description="Bulleted list or concise text of strategies that worked for this CWE")
+    avoid_text: str = Field(..., description="Bulleted list or concise text of strategies that failed or should be avoided")
+    examples: List[str] = Field("", description="A few representative successful injections snippet")
+    reasons: List[str] = Field("", description="Short reasoning why each injections worked")
+    support_count: int = Field(0, description="Number of feedback records summarized into this condenser", exclude=True)

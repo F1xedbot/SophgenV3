@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 from helpers.pydantic_to_sql import pydantic_model_to_create_table_sql
-from schema.agents import InjectionSchema, ValidationSchema, ResearcherSchema
+from schema.agents import InjectionSchema, ValidationSchema, ResearcherSchema, CondenserSchema
 from schema.base import FunctionMetadataSchema, FunctionRawSchema
 from utils.enums import AgentTable
 
@@ -11,8 +11,7 @@ class SQLITEConfig:
     """
     PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", ".")).resolve()
     DB_PATH = (PROJECT_ROOT / os.getenv("SQLITE3_PATH", "data/sophgen.db")).resolve()
-
-    EXTRA_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True)]
+    EXTRA_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True), ("ref_hash", "TEXT", True)]
     FUNCTION_RAW_SQL = pydantic_model_to_create_table_sql(
         FunctionRawSchema,
         table_name="functions",
@@ -50,7 +49,14 @@ class SQLITEConfig:
         add_timestamp=True,
     )
 
-    TABLES_SQL = [FUNCTION_RAW_SQL, FUNCTION_METADATA_SQL, INJECTIONS_SQL, VALIDATIONS_SQL, RESEARCHER_SQL]
+    CONDENSER_SQL = pydantic_model_to_create_table_sql(
+        CondenserSchema,
+        table_name=AgentTable.CONDENSER,
+        add_id_pk=True,
+        add_timestamp=True
+    )
+
+    TABLES_SQL = [FUNCTION_RAW_SQL, FUNCTION_METADATA_SQL, INJECTIONS_SQL, VALIDATIONS_SQL, RESEARCHER_SQL, CONDENSER_SQL]
 
     @classmethod
     def get_db_path(cls) -> str:

@@ -14,3 +14,4 @@ class AgentTable(StrEnum):
     INJECTOR = "injections"
     VALIDATOR = "validations"
     RESEARCHER = "researches"
+    CONDENSER = "condenser"

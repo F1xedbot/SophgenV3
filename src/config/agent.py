@@ -16,3 +16,10 @@ RESEARCHER_TOOL_CONFIG = {
     "max_results": 5,
     "fresh_cache": False # <-- set this to True if you want the researcher to run on a fresh cache
 }
+
+CONDENSER_TOOL_CONFIG = {
+    "table_name": AgentTable.CONDENSER,
+    "ref_key": "cwe_label",
+    "references" : [AgentTable.INJECTOR, AgentTable.VALIDATOR],
+    "excluded_keys": ["id", "func_name", "timestamp", "lines", "roi_index"]
+}
