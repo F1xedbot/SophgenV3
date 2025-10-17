@@ -44,7 +44,6 @@ async def run_validation(index: int, cwe_id: str, llm: LLMService, db: SQLiteDBS
                 researcher.run(state),
                 timeout=MAX_TASK_TIMEOUT
             )
-            logger.info(f"[{index}] Success: {result}")
             await asyncio.sleep(RATE_LIMIT_DELAY)
             return
 
