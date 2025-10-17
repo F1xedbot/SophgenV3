@@ -8,6 +8,15 @@ class Context(BaseModel):
     cwe_details: Optional[str] = None
     func_code: str
 
+class ResearcherSchema(BaseModel):
+    """Respond to the user with this"""
+    cwe_id: str = Field(..., description="Unique CWE identifier of the vulnerability.")
+    cwe_name: str = Field(..., description="Official CWE title describing the vulnerability type.")
+    vulnerable_code_patterns: list[str] = Field(..., description="Characteristic code constructs that lead to the vulnerability.")
+    typical_code_context: str = Field(..., description="Common implementation scenarios where the vulnerability tends to occur.")
+    minimal_code_modification: str = Field(..., description="Smallest code alteration that can introduce the vulnerability.")
+    code_injection_points: list[str] = Field(..., description="Critical code locations where the vulnerability can be injected.")
+
 class ValidationSchema(BaseModel):
     roi_index: int = Field(..., description="1-based index of the ROI being validated.")
     cwe_label: str = Field(..., description="CWE-ID from the injection.")
