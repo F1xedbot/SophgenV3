@@ -13,3 +13,4 @@ class LLMModels(StrEnum):
 class AgentTable(StrEnum):
     INJECTOR = "injections"
     VALIDATOR = "validations"
+    RESEARCHER = "researchers"
