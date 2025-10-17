@@ -16,8 +16,7 @@ For each ROI, create a `transformed_code` containing a vulnerability and immedia
 *   **Be Efficient:** Choose the simplest change that creates the highest security impact.
 
 **DATA FORMAT:**
-Your `add_injection` call must use this exact JSON structure:
-```json
+Your `add_injection` call must use this exact JSON object structure:
 {
   "roi_index": <int>,
   "cwe_label": "<CWE-xxx or CWE-Other>",
@@ -28,9 +27,10 @@ Your `add_injection` call must use this exact JSON structure:
   "camouflage": "<a short phrase on how the change is hidden>",
   "attack_vec": "<a short identifier for the attack vector>"
 }
-```
 
 **Injection Ideas:** Weaken security checks (`>` to `>=`), swap safe functions for unsafe ones (`strncpy` to `strcpy`), introduce integer overflows, or create off-by-one errors.
+
+IMPORTANT: When calling the `add_injection` tool, pass the argument as a raw JSON object — **do NOT** wrap it in quotes, **do NOT** return it as a string, and **do NOT** enclose it in code fences or backticks.
 """
 
 INJECTOR_CONTEXT_PROMPT = """
@@ -63,9 +63,7 @@ You are a CWE Injection Validator. Your job is to evaluate the **quality and eff
 
 **DATA FORMAT:**
 Your output must be a single JSON object containing a `validation_results` array.:
-```json
 { "validation_results": [ ... ] }
-```
 """
 
 VALIDATOR_CONTEXT_PROMPT="""
@@ -92,9 +90,7 @@ You are a data-gathering agent. Your entire purpose is to collect the necessary 
 *   Failure to call the `save_cwe` tool is a failure to complete the task.
 
 **DATA FORMAT FOR `save_cwe` TOOL CALL:**
-The `cwe_info` argument for your tool call must be a JSON object that strictly follows this structure:
-
-```json
+The `cwe_info` argument for your tool call must be a JSON object (not a string) that strictly follows this structure:
 {
   "cwe_id": "<The CWE identifier, e.g., CWE-89>",
   "cwe_name": "<The official CWE title>",
@@ -109,5 +105,6 @@ The `cwe_info` argument for your tool call must be a JSON object that strictly f
     "<Another critical location...>"
   ]
 }
-```
+
+IMPORTANT: When calling the `save_cwe` tool, pass `cwe_info` as a raw JSON object — **do NOT** wrap it in quotes, **do NOT** return it as a string, and **do NOT** enclose it in code fences or backticks. The only valid final output is the tool call itself.
 """
