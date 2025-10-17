@@ -5,7 +5,7 @@ def filter_dict_fields(
     keys: Iterable[str], 
     data: Mapping[str, Any], 
     fields: Iterable[str], 
-    prefix: str = "research:"
+    prefix: str = ""
 ) -> str:
     """
     Filters a dictionary based on a list of keys and specified fields.
