@@ -1,7 +1,7 @@
 import inspect
 from typing import List, Callable, Annotated, Optional
 from langgraph.prebuilt import InjectedState
-from schema.agents import InjectionSchema, ValidationOuput, Context
+from schema.agents import InjectionSchema, ValidationOuput, Context, ResearcherSchema
 from agents.states import InjectorState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
@@ -33,6 +33,17 @@ class ResearcherTools(BaseTools):
     def __init__(self, config: Optional[dict] | None = RESEARCHER_TOOL_CONFIG):
         super().__init__()
         self.engine = TavilySearch(max_results=config["max_results"])
+        self.table_name = config["table_name"]
+
+    def save_cwe(
+        self,
+        cwe_info: ResearcherSchema
+    ) -> bool:
+        if not cwe_info:
+            return False
+        data = flatten_pydantic(cwe_info)
+        self.db.save_data(self.table_name, data)
+        return True
 
 
 class InjectorTools(BaseTools):

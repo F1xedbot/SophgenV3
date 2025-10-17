@@ -1,9 +1,5 @@
 import orjson
 from typing import Iterable, Mapping, Any
-import re
-
-def filter_json_response(content: str):
-    return re.sub(r"^```(?:json)?|```$", "", content, flags=re.MULTILINE).strip()
 
 def filter_dict_fields(
     keys: Iterable[str], 

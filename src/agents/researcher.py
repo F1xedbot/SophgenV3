@@ -1,13 +1,10 @@
 from services.llm import LLMService
 from agents.prompt import RESEARCHER_PROMPT
 from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
 from agents.states import ResearcherState
 from agents.tools import BaseTools
 from agents.mixins import AgentRetryMixin
-from schema.agents import ResearcherSchema
-import orjson
-from utils.filter import filter_json_response
 
 class Researcher(AgentRetryMixin):
     def __init__(self, llm: LLMService, tools: BaseTools) -> None:
@@ -17,9 +14,10 @@ class Researcher(AgentRetryMixin):
         self.agent = self._build_agent()
 
     def _build_agent(self):
+        tools = [*self.tools.get_tools(), self.tools.engine]
         return create_react_agent(
             model=self.llm.client,
-            tools=[self.tools.engine],
+            tools=tools,
             state_schema=self.state_schema,
             prompt=self.build_messages,
         )
@@ -54,17 +52,7 @@ class Researcher(AgentRetryMixin):
                 rebuild_fn=self._rebuild_client,
                 input=initial_state,
             )
-
-            response: AIMessage = result["messages"][-1]
-            content = filter_json_response(response.content)
-
-            try:
-                payload = orjson.loads(content)
-            except orjson.JSONDecodeError:
-                raise ValueError(f"Response content is not valid JSON:\n{content}")
-
-            return ResearcherSchema(**payload)
-        
+            return result    
         except Exception as e:
             raise RuntimeError(f"Agent run failed: {e}") from e
 

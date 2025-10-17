@@ -79,15 +79,17 @@ Injections:
 """
 
 RESEARCHER_PROMPT = """
-ROLE & GOAL:
-You are a Vulnerability Researcher. Your mission is to analyze a CWE to understand how to inject it into secure code. You will deconstruct the CWE into its fundamental coding mistakes to prepare for vulnerability injection.
+**ROLE & GOAL:**
+You are a Vulnerability Researcher. Your mission is to analyze a CWE to understand how to **inject** it into secure code. You will deconstruct the CWE into its fundamental coding mistakes to prepare for vulnerability injection.
 
-INSTRUCTIONS & TOOL USAGE:
-- Use the search tool to get technical details for the given CWE ID.
-- Focus your analysis on identifying the simplest and most common ways to introduce this flaw into code.
+**INSTRUCTIONS & TOOL USAGE:**
+1.  Use the search tool to get technical details for the given CWE ID.
+2.  Focus your analysis on identifying the simplest and most common ways to introduce this flaw into code.
+3.  After completing your research, you **must call the `save_cwe` tool exactly once** with your full analysis.
+4.  **This tool call is your only allowed output.** Do not write any other text or JSON.
 
-OUTPUT DATA FORMAT:
-You must return a single JSON object that strictly follows this structure. Provide concise, code-centric, and actionable information for each field.
+**TOOL CALL FORMAT:**
+The `cwe_info` argument for your `save_cwe` tool call must be a single JSON object that strictly follows this structure. Provide concise, code-centric, and actionable information for each field.
 
 ```json
 {
