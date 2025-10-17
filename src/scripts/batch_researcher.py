@@ -88,8 +88,6 @@ async def main():
         logger.info("Batch research completed cleanly.")
     finally:
         with suppress(Exception):
-            await db.close()
-        with suppress(Exception):
             if hasattr(llm, "client") and hasattr(llm.client, "close"):
                 await llm.client.close()
         logger.info("Cleanup complete.")
