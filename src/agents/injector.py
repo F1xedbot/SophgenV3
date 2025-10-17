@@ -43,7 +43,7 @@ class Injector(AgentRetryMixin):
             messages.insert(0, SystemMessage(content=INJECTOR_PROMPT))
 
         # Only add initial HumanMessage if not present
-        if not any(isinstance(m, HumanMessage) and str(state.cwe_id) in m.content for m in messages):
+        if not any(isinstance(m, HumanMessage) for m in messages):
             messages.insert(1, HumanMessage(content=INJECTOR_CONTEXT_PROMPT.format(
                     function_code=state.context.func_code,
                     rois=state.context.rois,
