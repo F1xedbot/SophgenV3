@@ -77,3 +77,32 @@ Injections:
 {injections}
 (injections are sequentially ordered top-to-bottom)
 """
+
+RESEARCHER_PROMPT = """
+ROLE & GOAL:
+You are a Vulnerability Researcher. Your mission is to analyze a CWE to understand how to inject it into secure code. You will deconstruct the CWE into its fundamental coding mistakes to prepare for vulnerability injection.
+
+INSTRUCTIONS & TOOL USAGE:
+- Use the search tool to get technical details for the given CWE ID.
+- Focus your analysis on identifying the simplest and most common ways to introduce this flaw into code.
+
+OUTPUT DATA FORMAT:
+You must return a single JSON object that strictly follows this structure. Provide concise, code-centric, and actionable information for each field.
+
+```json
+{
+  "cwe_id": "<The CWE identifier, e.g., CWE-89>",
+  "cwe_name": "<The official CWE title>",
+  "vulnerable_code_patterns": [
+    "<A characteristic insecure code pattern, e.g., 'String concatenation for SQL queries'>",
+    "<Another common anti-pattern...>"
+  ],
+  "typical_code_context": "<Describe the common scenario where this flaw occurs, e.g., 'Database access functions handling user-supplied filters'>",
+  "minimal_code_modification": "<Describe the smallest possible code change that introduces the flaw, e.g., 'Removing an input sanitization call before query execution'>",
+  "code_injection_points": [
+    "<An ideal location in code to inject this flaw, e.g., 'Immediately after reading user input from a web form'>",
+    "<Another critical location...>"
+  ]
+}
+```
+"""
