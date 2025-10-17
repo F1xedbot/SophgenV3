@@ -30,12 +30,22 @@ class Researcher(AgentRetryMixin):
         self.agent = self._build_agent()
 
     def build_messages(self, state: ResearcherState) -> list[AnyMessage]:
-        messages = [
-            SystemMessage(content=RESEARCHER_PROMPT),
-            HumanMessage(str(state.cwe_id)),
-            *state.messages
-        ]
+        """
+        Build messages for the agent, ensuring system/human messages are not duplicated
+        when the agent is retried after a corrective instruction.
+        """
+        messages = list(state.messages)  # start with existing messages
+
+        # Only add system message if not already present
+        if not any(isinstance(m, SystemMessage) for m in messages):
+            messages.insert(0, SystemMessage(content=RESEARCHER_PROMPT))
+
+        # Only add initial HumanMessage with cwe_id if not present
+        if not any(isinstance(m, HumanMessage) and str(state.cwe_id) in m.content for m in messages):
+            messages.insert(1, HumanMessage(content=f"CWE-ID: {str(state.cwe_id)}"))
+
         return messages
+
     
     def _was_save_cwe_called(self, messages: list[AnyMessage]) -> bool:
         """
@@ -46,6 +56,7 @@ class Researcher(AgentRetryMixin):
             if isinstance(message, AIMessage) and message.tool_calls:
                 for tool_call in message.tool_calls:
                     if tool_call.get("name") == "save_cwe":
+                        print(tool_call)
                         args = tool_call.get("args") or {}
                         if args:  # True only if args is a non-empty dict
                             logging.info(
@@ -61,6 +72,8 @@ class Researcher(AgentRetryMixin):
         """
         initial_state_data = state.model_dump() if hasattr(state, "model_dump") else dict(state)
         current_state = self.state_schema(**initial_state_data)
+
+        current_state.messages = []
         
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
