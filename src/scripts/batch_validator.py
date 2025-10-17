@@ -23,7 +23,7 @@ async def run_validation(index: int, row: pd.Series, llm: LLMService, db: SQLite
     func_name = row["func_name"]
 
     # Skip if already validated
-    existing = db.get_data_group(DB_TABLE, "func_name", func_name)
+    existing = await db.get_data_group(DB_TABLE, "func_name", func_name)
     if existing:
         logger.info(f"[{index}] Skipping '{func_name}' — already in DB.")
         return
@@ -56,8 +56,7 @@ async def run_validation(index: int, row: pd.Series, llm: LLMService, db: SQLite
 
 
 async def main(start_index: int, end_index: int):
-    # Initialize logging and database (via init())
-    init()
+    await init()
     logger.info(f"Starting batch validation (range: {start_index}–{end_index})")
 
     # Load dataset

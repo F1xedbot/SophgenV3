@@ -38,7 +38,7 @@ class ResearcherTools(BaseTools):
         self.engine = TavilySearch(max_results=config["max_results"])
         self.table_name = config["table_name"]
 
-    def save_cwe(self, cwe_info: Optional[ResearcherSchema]) -> bool:
+    async def save_cwe(self, cwe_info: Optional[ResearcherSchema]) -> bool:
         """
         Save a CWE entry (from ResearcherSchema) into the database.
         Returns True on success, False otherwise.
@@ -48,7 +48,7 @@ class ResearcherTools(BaseTools):
 
         try:
             data = flatten_pydantic(cwe_info)
-            self.db.save_data(self.table_name, data)
+            await self.db.save_data(self.table_name, data)
             return True
         except Exception as e:
             logging.exception(f"Failed to save CWE: {e}")
@@ -61,7 +61,7 @@ class InjectorTools(BaseTools):
         self.table_name = self.config["table_name"]
         self.db = SQLiteDBService()
 
-    def add_injection(
+    async def add_injection(
         self,
         injections: list[InjectionSchema],
         state: Annotated[InjectorState, InjectedState]
@@ -88,7 +88,7 @@ class InjectorTools(BaseTools):
             injection_data = flatten_pydantic(inj)
             injection_data["func_name"] = state.context.func_name
             injection_data["lines"] = roi_lines[inj.roi_index - 1]
-            self.db.save_data(self.table_name, injection_data)
+            await self.db.save_data(self.table_name, injection_data)
 
             messages.append(
                 f"Injection for ROI {inj.roi_index} with CWE {inj.cwe_label} added successfully."
@@ -106,7 +106,7 @@ class ValidatorTools(BaseTools):
         self.excluded_keys = self.config['excluded_keys']
 
     @exclude_tool
-    def get_injections(self, func_name: str) -> dict:
+    async def get_injections(self, func_name: str) -> dict:
         """
         Retrieve all injections for a given function name,
         filtering out excluded keys from each record.
@@ -114,7 +114,7 @@ class ValidatorTools(BaseTools):
         if not func_name:
             return []
 
-        all_injections = self.db.get_data_group(
+        all_injections = await self.db.get_data_group(
             self.injection_table,
             self.injection_group_key,
             func_name
@@ -131,7 +131,7 @@ class ValidatorTools(BaseTools):
         return filtered
     
     @exclude_tool
-    def save_validations(self, validations: ValidationOuput, context: Context) -> bool:
+    async def save_validations(self, validations: ValidationOuput, context: Context) -> bool:
         """
         Save all validation results from ValidationOuput to the database.
         Returns True on success, False otherwise.
@@ -145,7 +145,7 @@ class ValidatorTools(BaseTools):
                 validation_data = flatten_pydantic(item)
                 validation_data["func_name"] = context.func_name
                 validation_data["lines"] = roi_lines[item.roi_index - 1]
-                self.db.save_data(self.table_name, validation_data)
+                await self.db.save_data(self.table_name, validation_data)
             return True
         except Exception as e:
             logging.exception(f"Failed to save validations: {e}")

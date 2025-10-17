@@ -2,9 +2,6 @@ from fastapi import FastAPI
 from src.initializer import init
 from routers import agents
 
-# Initialize environment and logging first
-init()
-
 # Create FastAPI app
 app = FastAPI(
     title="SophGenV3 API",
@@ -12,10 +9,13 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Include routers
+# Async initialization
+@app.on_event("startup")
+async def on_startup():
+    await init()
+
 app.include_router(agents.router, prefix="/agents", tags=["Agents"])
 
-# Root endpoint
 @app.get("/")
 async def root():
     return {"message": "API is running"}

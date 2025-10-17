@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 async def run_validation(index: int, cwe_id: str, llm: LLMService, db: SQLiteDBService):
     # Skip if already researched
-    existing = db.get_data_group(DB_TABLE, "cwe_id", cwe_id)
+    existing = await db.get_data_group(DB_TABLE, "cwe_id", cwe_id)
     if existing:
         logger.info(f"[{index}] Skipping '{cwe_id}' — already in DB.")
         return
@@ -49,7 +49,7 @@ async def run_validation(index: int, cwe_id: str, llm: LLMService, db: SQLiteDBS
 
 
 async def main():
-    init()
+    await init()
     logger.info("Starting CWE research...")
 
     with open(INPUT_JSON, "rb") as f:

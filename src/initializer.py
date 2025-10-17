@@ -2,7 +2,7 @@ import logging
 import os
 from services.sqlite import SQLiteDBService
 
-def init():
+async def init():
     """
     Initialize required components.
     """
@@ -15,5 +15,5 @@ def init():
     logging.info("Logging initialized")
 
     db = SQLiteDBService()
-    db.init_db()
+    await db.init_db()
     logging.info("Database initialized")

@@ -52,5 +52,5 @@ class Validator(AgentRetryMixin):
             rebuild_fn=self._rebuild_client,
             input=messages,
         )
-        return self.tools.save_validations(response, self.context)        
+        return await self.tools.save_validations(response, self.context)        
 
