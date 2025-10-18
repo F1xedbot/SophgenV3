@@ -2,6 +2,11 @@ import asyncio
 import logging
 import pandas as pd
 import traceback
+import re
+import os
+from contextlib import suppress
+from google.api_core.exceptions import ResourceExhausted
+
 from utils.enums import LLMModels
 from services.llm import LLMService
 from agents.validator import Validator
@@ -12,8 +17,11 @@ from initializer import init
 # ---------------- CONFIG ---------------- #
 INPUT_CSV = "data/merged_test_input.csv"
 DB_TABLE = "validations"
-MAX_RETRIES = 3
-RETRY_DELAY = 15  # seconds between retries
+
+MAX_RETRIES = 5
+DEFAULT_RETRY_DELAY = 20  # seconds between non-quota retries
+MAX_TASK_TIMEOUT = 90     # seconds to forcibly kill any hanging call
+RATE_LIMIT_DELAY = 5      # seconds between LLM calls (stay under 15/min)
 # ---------------------------------------- #
 
 logger = logging.getLogger(__name__)
@@ -41,18 +49,42 @@ async def run_validation(index: int, row: pd.Series, llm: LLMService, db: SQLite
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             logger.info(f"[{index}] Validating '{func_name}' (attempt {attempt}/{MAX_RETRIES})...")
-            response = await validator.run(context)
+
+            # Force timeout for each validator call
+            response = await asyncio.wait_for(
+                validator.run(context),
+                timeout=MAX_TASK_TIMEOUT
+            )
+
             logger.info(f"[{index}] Validation successful for '{func_name}'.")
+            await asyncio.sleep(RATE_LIMIT_DELAY)
             return
+
+        except asyncio.TimeoutError:
+            logger.warning(f"[{index}] Timeout after {MAX_TASK_TIMEOUT}s — skipping '{func_name}'.")
+            break
+
+        except ResourceExhausted as e:
+            # Handle quota-related delays
+            match = re.search(r"Please retry in (\d+\.?\d*)s", str(e))
+            wait_time = float(match.group(1)) + 1 if match else 60
+            if attempt < MAX_RETRIES:
+                logger.info(f"[{index}] Waiting {wait_time:.1f}s due to quota exhaustion.")
+                await asyncio.sleep(wait_time)
+            else:
+                logger.error(f"[{index}] Failed permanently due to quota for '{func_name}'.")
+                break
 
         except Exception as e:
             logger.warning(f"[{index}] Attempt {attempt} failed: {e}")
             traceback.print_exc()
 
             if attempt < MAX_RETRIES:
-                await asyncio.sleep(RETRY_DELAY)
+                logger.info(f"[{index}] Waiting {DEFAULT_RETRY_DELAY}s before retrying...")
+                await asyncio.sleep(DEFAULT_RETRY_DELAY)
             else:
                 logger.error(f"[{index}] Failed permanently after {MAX_RETRIES} attempts.")
+                break
 
 
 async def main(start_index: int, end_index: int):
@@ -69,12 +101,18 @@ async def main(start_index: int, end_index: int):
     llm = LLMService(LLMModels.GEMINI_2_5_FLASH_LITE)
     db = SQLiteDBService()
 
-    # Run validator over range
-    for i in range(start_index, end_index):
-        row = llm_input.iloc[i]
-        await run_validation(i, row, llm, db)
+    try:
+        for i in range(start_index, end_index):
+            row = llm_input.iloc[i]
+            await run_validation(i, row, llm, db)
 
-    logger.info("✅ Batch validation completed.")
+        logger.info("✅ Batch validation completed cleanly.")
+    finally:
+        with suppress(Exception):
+            if hasattr(llm, "client") and hasattr(llm.client, "close"):
+                await llm.client.close()
+        logger.info("Cleanup complete.")
+        os._exit(0)  # ensure full shutdown
 
 
 if __name__ == "__main__":
