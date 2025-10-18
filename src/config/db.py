@@ -11,7 +11,10 @@ class SQLITEConfig:
     """
     PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", ".")).resolve()
     DB_PATH = (PROJECT_ROOT / os.getenv("SQLITE3_PATH", "data/sophgen.db")).resolve()
-    EXTRA_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True), ("ref_hash", "TEXT", True)]
+    
+    EXTRA_INJECTOR_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True), ("ref_hash", "TEXT", True)]
+    EXTRA_VALIDATOR_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True)]
+
     FUNCTION_RAW_SQL = pydantic_model_to_create_table_sql(
         FunctionRawSchema,
         table_name="functions",
@@ -29,7 +32,7 @@ class SQLITEConfig:
     INJECTIONS_SQL = pydantic_model_to_create_table_sql(
         InjectionSchema,
         table_name=AgentTable.INJECTOR,
-        extra_columns=EXTRA_COLUMNS,
+        extra_columns=EXTRA_INJECTOR_COLUMNS,
         add_id_pk=True,
         add_timestamp=True
     )
@@ -37,7 +40,7 @@ class SQLITEConfig:
     VALIDATIONS_SQL = pydantic_model_to_create_table_sql(
         ValidationSchema,
         table_name=AgentTable.VALIDATOR,
-        extra_columns=EXTRA_COLUMNS,
+        extra_columns=EXTRA_VALIDATOR_COLUMNS,
         add_id_pk=True,
         add_timestamp=True
     )
