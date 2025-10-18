@@ -1,5 +1,6 @@
 from typing import Optional, List
 from utils.enums import LLMProvider
+from utils.const import FIRST_KEY_INDEX
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class LLMKeyManager:
         if not keys:
             raise ValueError(f"No API key available for provider {provider}")
 
-        i = index if index is not None else self.current_index.get(provider, 0)
+        i = index if index is not None else self.current_index.get(provider, FIRST_KEY_INDEX)
         if i >= len(keys):
             raise ValueError(f"No more API keys left for provider {provider}")
 
@@ -32,7 +33,7 @@ class LLMKeyManager:
         if not keys:
             raise ValueError(f"No keys found for provider {provider}")
 
-        current = self.current_index.get(provider, 0)
+        current = self.current_index.get(provider, FIRST_KEY_INDEX)
         if current + 1 >= len(keys):
             logger.error(f"All API keys exhausted for {provider}.")
             return None
