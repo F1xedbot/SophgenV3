@@ -5,9 +5,10 @@ from schema.agents import InjectionSchema, ValidationOuput, Context, ResearcherS
 from agents.states import InjectorState, ResearcherState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
-from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG
+from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG, CONDENSER_TOOL_CONFIG
 from utils.decorators import exclude_tool, critical_tool
 from langchain_tavily import TavilySearch
+from utils.common import hash_data
 import logging
 from services.local.cache import read_cache, update_cache
 
@@ -143,12 +144,12 @@ class InjectorTools(BaseTools):
             injection_data = flatten_pydantic(inj)
             injection_data["func_name"] = state.context.func_name
             injection_data["lines"] = roi_lines[inj.roi_index - 1]
+            injection_data["ref_hash"] = hash_data(injection_data)
             await self.db.save_data(self.table_name, injection_data)
 
             messages.append(
                 f"Injection for ROI {inj.roi_index} with CWE {inj.cwe_label} added successfully."
             )
-
         return "\n".join(messages)
     
 class ValidatorTools(BaseTools):
@@ -159,12 +160,14 @@ class ValidatorTools(BaseTools):
         self.injection_table = self.config["injection_table"]
         self.injection_group_key = self.config["injection_group_key"]
         self.excluded_keys = self.config['excluded_keys']
+        self.merge_key = self.config["merge_key"]
 
     @exclude_tool
-    async def get_injections(self, func_name: str) -> dict:
+    async def get_injections(self, func_name: str) -> list[dict]:
         """
         Retrieve all injections for a given function name,
-        filtering out excluded keys from each record.
+        filtering out excluded keys from each record,
+        and deduplicate by 'ref_hash'.
         """
         if not func_name:
             return []
@@ -183,7 +186,16 @@ class ValidatorTools(BaseTools):
             for row in all_injections
         ]
 
-        return filtered
+        seen = set()
+        deduped = []
+        for row in filtered:
+            merge_key = row.get(self.merge_key)
+            if merge_key not in seen:
+                seen.add(merge_key)
+                deduped.append(row)
+
+        return deduped
+
     
     @exclude_tool
     async def save_validations(self, validations: ValidationOuput, context: Context) -> bool:
@@ -205,3 +217,45 @@ class ValidatorTools(BaseTools):
         except Exception as e:
             logging.exception(f"Failed to save validations: {e}")
             return False
+
+class CondenserTools(BaseTools):
+    def __init__(self, config: Optional[dict] | None = CONDENSER_TOOL_CONFIG):
+        super().__init__()
+        self.config = config
+        self.references = self.config["references"]
+        self.ref_key = self.config["ref_key"]
+        self.merge_key = self.config["merge_key"]
+        self.excluded_keys = self.config["excluded_keys"]
+
+    async def get_context(self, cwe_id: str) -> list[dict]:
+        """
+        Fetch reference data for a CWE ID across multiple tables, 
+        """
+        ref_tables = self.references
+        all_data = []
+
+        for ref in ref_tables:
+            rows = await self.db.get_data_by_keys(ref, self.ref_key, cwe_id)
+            all_data.append(rows)
+
+        # Merge entries
+        merged: dict[str, dict] = {}
+        for table_rows in all_data:
+            for row in table_rows:
+                label = row.get(self.merge_key)
+                if label not in merged:
+                    merged[label] = dict(row)
+                else:
+                    merged[label].update(row)
+
+        filtered = [
+            {k: v for k, v in row.items() if k not in self.excluded_keys}
+            for row in merged.values()
+        ]
+
+        return filtered
+
+
+        
+
+
