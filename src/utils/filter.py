@@ -35,7 +35,7 @@ def filter_list_fields(
     data: list[dict[str, Any]],
     fields: Iterable[str],
     key_field: str = "id"
-) -> str:
+) -> dict:
     """
     Filters a list of dictionaries based on a list of keys and specified fields.
 
@@ -57,4 +57,4 @@ def filter_list_fields(
             filtered = {field: entry.get(field) for field in fields}
             filtered_list.append(filtered)
 
-    return orjson.dumps(filtered_list, option=orjson.OPT_INDENT_2).decode("utf-8")
+    return filtered_list
