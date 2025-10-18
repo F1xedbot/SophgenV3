@@ -16,12 +16,12 @@ class Validator(AgentRetryMixin):
     def _build_agent(self):
         return self.llm.client.with_structured_output(ValidationOuput)
     
-    def _rebuild_client(self, new_key: str):
-        self.llm.client = self.llm._init_client(new_key)
+    def _rebuild_client(self):
+        self.llm.client = self.llm._init_client()
         self.agent = self._build_agent()
 
-    def build_messages(self) -> list[AnyMessage]:
-        all_injections = self.tools.get_injections(self.context.func_name)
+    async def build_messages(self) -> list[AnyMessage]:
+        all_injections = await self.tools.get_injections(self.context.func_name)
         if not all_injections:
             raise AssertionError(f"No injections found for: {self.context.func_name}")
 
@@ -44,7 +44,7 @@ class Validator(AgentRetryMixin):
 
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
-        messages = self.build_messages()
+        messages = await self.build_messages()
         response = await self.safe_invoke(
             invoke_fn=self.agent.ainvoke,
             provider=provider,

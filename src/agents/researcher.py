@@ -26,8 +26,8 @@ class Researcher(AgentRetryMixin):
             prompt=self.build_messages,
         )
     
-    def _rebuild_client(self, new_key: str):
-        self.llm.client = self.llm._init_client(new_key)
+    def _rebuild_client(self):
+        self.llm.client = self.llm._init_client()
         self.agent = self._build_agent()
 
     def build_messages(self, state: ResearcherState) -> list[AnyMessage]:

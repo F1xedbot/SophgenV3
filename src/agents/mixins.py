@@ -84,7 +84,6 @@ class AgentRetryMixin(ABC):
         while attempt <= max_retries:
             try:
                 return await invoke_fn(*args, **kwargs)
-
             except (RateLimitError, ResourceExhausted) as e:
                 logger.warning(f"[QuotaError] {e}. Retrying with new key...")
             except (AuthenticationError, PermissionDenied) as e:
@@ -98,7 +97,7 @@ class AgentRetryMixin(ABC):
             if not new_key:
                 raise RuntimeError(f"All API keys exhausted for provider: {provider}")
 
-            self._rebuild_client(new_key)
+            self._rebuild_client()
             attempt += 1
 
         raise RuntimeError(f"Failed after {max_retries + 1} attempts for {provider}.")
