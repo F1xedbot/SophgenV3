@@ -23,5 +23,8 @@ CONDENSER_TOOL_CONFIG = {
     "ref_key": "cwe_label",
     "merge_key": "ref_hash",
     "references" : [AgentTable.INJECTOR, AgentTable.VALIDATOR],
-    "excluded_keys": ["id", "func_name", "timestamp", "lines", "roi_index", "ref_hash"]
+    "excluded_keys": ["id", "func_name", "timestamp", "lines", "roi_index", 
+                      "ref_hash", "tags", "camouflage", "attack_vec"],
+    "cwe_table": AgentTable.RESEARCHER,
+    "cwe_table_ref_key": "cwe_id"
 }
