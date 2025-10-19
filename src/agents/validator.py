@@ -38,7 +38,7 @@ class Validator(AgentRetryMixin):
         return messsages
 
     async def run(self, context: Context):
-        self.context = context.model_dump()
+        self.context = context
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
         messages = await self.build_messages()
