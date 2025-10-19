@@ -12,7 +12,7 @@ def remove_c_comments(code: str) -> str:
     # Remove all single-line comments (//...) — only up to the end of the line
     code = re.sub(r'//.*', '', code)
 
-    return code
+    return code.strip()
 
 def filter_dict_fields(
     keys: Iterable[str], 
