@@ -4,16 +4,16 @@ from services.llm import LLMService
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
 from agents.states import ResearcherState
-from agents.tools import BaseTools
+from agents.tools import ResearcherTools
 from agents.mixins import AgentRetryMixin
 from utils.const import MAX_AGENT_RETRIES
 
 logger = logging.getLogger(__name__)
 
 class Researcher(AgentRetryMixin):
-    def __init__(self, llm: LLMService, tools: BaseTools, max_retries: int = MAX_AGENT_RETRIES) -> None:
+    def __init__(self, llm: LLMService, max_retries: int = MAX_AGENT_RETRIES) -> None:
         self.llm = llm
-        self.tools = tools
+        self.tools = ResearcherTools()
         self.state_schema = ResearcherState
         self.max_retries = max_retries
         self.agent = self._build_agent()
@@ -47,7 +47,7 @@ class Researcher(AgentRetryMixin):
 
         return messages
 
-    async def run(self, state: ResearcherState) -> ResearcherState:
+    async def run(self, state: ResearcherState):
         """
         Invoke the agent in a loop, forcing it to retry until all critical tools are called.
         """
