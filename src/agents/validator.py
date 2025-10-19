@@ -1,20 +1,22 @@
 from services.llm import LLMService
 from agents.tools import ValidatorTools 
-from schema.agents import ValidationOuput, Context
+from schema.agents import Context, ValidatorOutput
 import json
 from agents.prompt import VALIDATOR_CONTEXT_PROMPT, VALIDATOR_PROMPT
 from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
 from agents.mixins import AgentRetryMixin
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Validator(AgentRetryMixin):
     def __init__(self, llm: LLMService) -> None:
         self.llm = llm
         self.tools = ValidatorTools()
         self.agent = self._build_agent()
-        self.required_keys = ["func_code", "func_name", "lines"]
 
     def _build_agent(self):
-        return self.llm.client.with_structured_output(ValidationOuput)
+        return self.llm.client.with_structured_output(ValidatorOutput)
     
     def _rebuild_client(self):
         self.llm.client = self.llm._init_client()
@@ -23,8 +25,9 @@ class Validator(AgentRetryMixin):
     async def build_messages(self) -> list[AnyMessage]:
         all_injections = await self.tools.get_injections(self.context.func_name)
         if not all_injections:
-            raise AssertionError(f"No injections found for: {self.context.func_name}")
-
+            logger.info(f"No injections found for: {self.context.func_name}")
+            return []
+        
         messsages = [
             SystemMessage(content=VALIDATOR_PROMPT),
             HumanMessage(content=VALIDATOR_CONTEXT_PROMPT.format(
@@ -35,16 +38,13 @@ class Validator(AgentRetryMixin):
         return messsages
 
     async def run(self, context: Context):
-        context_dict = context.model_dump()
-        missing = [k for k in self.required_keys if k not in context_dict]
-        if missing:
-            raise KeyError(f"Missing required validator keys: {missing}")
-        
-        self.context = context
-
+        self.context = context.model_dump()
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
         messages = await self.build_messages()
+        if not messages:
+            return {}
+
         response = await self.safe_invoke(
             invoke_fn=self.agent.ainvoke,
             provider=provider,
@@ -52,5 +52,6 @@ class Validator(AgentRetryMixin):
             rebuild_fn=self._rebuild_client,
             input=messages,
         )
-        return await self.tools.save_validations(response, self.context)        
+        await self.tools.save_validations(response, self.context)
+        return response   
 
