@@ -1,7 +1,7 @@
 import inspect
 from typing import List, Callable, Annotated, Optional
 from langgraph.prebuilt import InjectedState
-from schema.agents import InjectionSchema, ValidatorOutput, Context, ResearcherSchema
+from schema.agents import ValidatorOutput, Context, ResearcherSchema, InjectorOutput
 from agents.states import ResearcherState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
@@ -119,23 +119,22 @@ class InjectorTools(BaseTools):
 
     async def save_injections(
         self,
-        injections: list[InjectionSchema],
+        injections: InjectorOutput,
         context: Context
     ) -> list[str]:
         """
-        Save CWE injections from a list of InjectionSchema objects.
+        Save CWE injections from InjectorOutput.
 
         Skips any injection where `transformed_code` matches `original_pattern`.
         Returns a list of messages describing failed injections, including ROI, CWE, and status.
         """
-
-        if not injections:
+        if not injections or not injections.injection_results:
             return ["No injections provided; at least one is required."]
 
         messages = []
         roi_lines = context.lines.split('\n')
 
-        for inj in injections:
+        for inj in injections.injection_results:
             if remove_c_comments(inj.original_pattern) == remove_c_comments(inj.transformed_code):
                 messages.append(
                     f"ROI {inj.roi_index} ({inj.cwe_label}): No meaningful change;"
