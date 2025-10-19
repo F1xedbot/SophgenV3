@@ -27,7 +27,7 @@ class KnowledgeCondenser(AgentRetryMixin):
 
     async def build_messages(self) -> list[AnyMessage]:
         feedbacks = await self.tools.get_feedbacks([self.cwe_id])
-        latest_strategy = await self.tools.get_latest_strategy(self.cwe_id)
+        latest_strategy = await self.tools.get_latest_strategy(self.cwe_id, self.interval)
         cwe_details = await self.tools.get_cwe_details([self.cwe_id])
 
         if not feedbacks or not cwe_details:
@@ -44,8 +44,10 @@ class KnowledgeCondenser(AgentRetryMixin):
         ]
         return messsages
     
-    async def run(self, cwe_id: str, support_count: int):
+    async def run(self, cwe_id: str, support_count: int, interval: int):
         self.cwe_id = cwe_id
+        self.support_count = support_count
+        self.interval = interval
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
         messages = await self.build_messages()
@@ -59,5 +61,5 @@ class KnowledgeCondenser(AgentRetryMixin):
             rebuild_fn=self._rebuild_client,
             input=messages,
         )
-        await self.tools.save_cwe_lessons(response, support_count)
+        await self.tools.save_cwe_lessons(response,  self.support_count)
         return response  

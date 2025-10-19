@@ -22,8 +22,17 @@ class SQLiteDBService:
                     await db.execute(sql)
             await db.commit()
 
-    async def save_data(self, table_name: str, data: Dict[str, Any]) -> None:
-        """Insert a dict into a table."""
+    async def save_data(
+        self,
+        table_name: str,
+        data: Dict[str, Any],
+        replace: bool = False,
+        match_fields: Optional[list[str]] = None,
+    ) -> None:
+        """
+        Insert a dict into a table.
+        If replace=True, replace existing row(s) when all match_fields match.
+        """
         if not data:
             raise ValueError("No data to insert")
 
@@ -35,9 +44,20 @@ class SQLiteDBService:
             columns = ", ".join(data.keys())
             placeholders = ", ".join(["?"] * len(data))
             values = list(data.values())
+
+            if replace and match_fields:
+                # Build WHERE clause for matching existing rows
+                where_clause = " AND ".join([f"{f} = ?" for f in match_fields])
+                match_values = [data[f] for f in match_fields]
+
+                # Delete old rows matching the condition
+                delete_sql = f"DELETE FROM {table_name} WHERE {where_clause}"
+                await db.execute(delete_sql, match_values)
+
             sql = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
             await db.execute(sql, values)
             await db.commit()
+
 
     async def get_data_group(
         self, table_name: str, group_key: str | None = None, group_value: Any = None
@@ -78,6 +98,23 @@ class SQLiteDBService:
             async with db.execute(sql, keys_list) as cursor:
                 rows = await cursor.fetchall()
                 return [dict(row) for row in rows]
+            
+    async def get_all_counts_by_key(
+        self, table_name: str, key_field: str
+    ) -> dict[str, int]:
+        """
+        Return a dictionary mapping each unique key_field value to its row count.
+        """
+        sql = f"SELECT {key_field}, COUNT(*) as count FROM {table_name} GROUP BY {key_field}"
+
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("PRAGMA journal_mode=WAL;")
+            await db.execute("PRAGMA synchronous = NORMAL;")
+            db.row_factory = aiosqlite.Row
+
+            async with db.execute(sql) as cursor:
+                rows = await cursor.fetchall()
+        return {row[key_field]: row["count"] for row in rows if row[key_field] is not None}
             
     async def count_data_by_key(
         self, table_name: str, key_field: str, key_value: Any

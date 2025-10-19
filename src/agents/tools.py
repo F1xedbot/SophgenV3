@@ -233,7 +233,7 @@ class CondenserTools(BaseTools):
         try:
             cwe_lesson_data = flatten_pydantic(cwe_lesson)
             cwe_lesson_data["support_count"] = support_count
-            await self.db.save_data(self.table_name, cwe_lesson_data)
+            await self.db.save_data(self.table_name, cwe_lesson_data, replace=True, match_fields=[self.ref_key])
             return True
         except Exception as e:
             logging.exception(f"Failed to save cwe lesson: {e}")
@@ -265,33 +265,45 @@ class CondenserTools(BaseTools):
         cwe_details = filter_list_fields(cwe_ids, cwe_data, cwe_fields, key_field=self.cwe_table_ref_key)
         return cwe_details
 
-    async def get_feedbacks(self, cwe_id: str) -> list[dict]:
+    async def get_feedbacks(self, cwe_id: str, limit: int | None = 10) -> list[dict]:
         """
-        Fetch reference data for a CWE ID across multiple tables, 
+        Fetch feedback data for a given CWE ID across multiple reference tables,
+        merge entries by the merge_key, and optionally return only the N newest by timestamp.
         """
-        ref_tables = self.references
         all_data = []
 
-        for ref in ref_tables:
+        # Collect all feedback rows across reference tables
+        for ref in self.references:
             rows = await self.db.get_data_by_keys(ref, self.ref_key, cwe_id)
-            all_data.append(rows)
+            all_data.extend(rows)
 
-        # Merge entries
+        # Merge by merge_key (e.g., feedback_label or similar)
         merged: dict[str, dict] = {}
-        for table_rows in all_data:
-            for row in table_rows:
-                label = row.get(self.merge_key)
-                if label not in merged:
-                    merged[label] = dict(row)
-                else:
-                    merged[label].update(row)
+        for row in all_data:
+            label = row.get(self.merge_key)
+            if not label:
+                continue
 
+            if label not in merged:
+                merged[label] = dict(row)
+            else:
+                merged[label].update(row)
+
+        # Remove excluded keys
         filtered = [
             {k: v for k, v in row.items() if k not in self.excluded_keys}
             for row in merged.values()
         ]
 
+        # Sort by timestamp (descending = newest first)
+        filtered.sort(key=lambda x: x.get("timestamp") or "", reverse=True)
+
+        # Limit to N newest entries if requested
+        if limit is not None:
+            filtered = filtered[:limit]
+
         return filtered
+
 
 
         
