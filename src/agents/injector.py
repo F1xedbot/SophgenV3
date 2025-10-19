@@ -64,7 +64,7 @@ class Injector(AgentRetryMixin):
                 corrective_messages = await self.tools.save_injections(response, self.context)
                 if not corrective_messages:
                     return response
-                messages.append(HumanMessage(content="\n".join(corrective_messages)))
+                messages.append(HumanMessage(content="CORRECTIVE MESSAGE: " + "\n".join(corrective_messages)))
             except Exception as e:
                 logger.error(f"An exception occurred during agent run on attempt {attempt + 1}: {e}")
                 raise RuntimeError(f"Agent run failed with an exception: {e}") from e
