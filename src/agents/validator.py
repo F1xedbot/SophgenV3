@@ -1,11 +1,11 @@
 from services.llm import LLMService
 from agents.tools import ValidatorTools 
 from schema.agents import Context, ValidatorOutput
-import json
 from agents.prompt import VALIDATOR_CONTEXT_PROMPT, VALIDATOR_PROMPT
 from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
 from agents.mixins import AgentRetryMixin
 import logging
+import orjson
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,9 @@ class Validator(AgentRetryMixin):
         self.llm.client = self.llm._init_client()
         self.agent = self._build_agent()
 
+    def _dump_context(self, context: dict):
+        return orjson.dumps(context, option=orjson.OPT_INDENT_2).decode("utf-8")
+
     async def build_messages(self) -> list[AnyMessage]:
         all_injections = await self.tools.get_injections(self.context.func_name)
         if not all_injections:
@@ -32,7 +35,7 @@ class Validator(AgentRetryMixin):
             SystemMessage(content=VALIDATOR_PROMPT),
             HumanMessage(content=VALIDATOR_CONTEXT_PROMPT.format(
                 function_code=self.context.func_code,
-                injections=json.dumps(all_injections, indent=2, ensure_ascii=False)
+                injections=self._dump_context(all_injections)
             ))
         ]
         return messsages
