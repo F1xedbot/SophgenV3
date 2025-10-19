@@ -227,11 +227,12 @@ class CondenserTools(BaseTools):
         self.cwe_table = self.config["cwe_table"]
         self.cwe_table_ref_key = self.config["cwe_table_ref_key"]
 
-    async def save_cwe_lessons(self, cwe_lesson: CondenserSchema) -> bool:
+    async def save_cwe_lessons(self, cwe_lesson: CondenserSchema, support_count: int) -> bool:
         if not cwe_lesson: 
             return False
         try:
             cwe_lesson_data = flatten_pydantic(cwe_lesson)
+            cwe_lesson_data["support_count"] = support_count
             await self.db.save_data(self.table_name, cwe_lesson_data)
             return True
         except Exception as e:

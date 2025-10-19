@@ -84,4 +84,3 @@ class CondenserSchema(BaseModel):
     avoid_text: str = Field(..., description="Bulleted list or concise text of strategies that failed or should be avoided")
     examples: List[str] = Field("", description="A few representative successful injections snippet")
     reasons: List[str] = Field("", description="Short reasoning why each injections worked")
-    support_count: int = Field(0, description="Number of feedback records summarized into this condenser", exclude=True)

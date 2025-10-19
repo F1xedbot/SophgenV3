@@ -14,6 +14,7 @@ class SQLITEConfig:
     
     EXTRA_INJECTOR_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True), ("ref_hash", "TEXT", True)]
     EXTRA_VALIDATOR_COLUMNS = [("func_name", "TEXT", True), ("lines", "TEXT", True)]
+    EXTRA_CONDENSER_COLUMNS = [("support_count", "INTEGER", True)]
 
     FUNCTION_RAW_SQL = pydantic_model_to_create_table_sql(
         FunctionRawSchema,
@@ -55,6 +56,7 @@ class SQLITEConfig:
     CONDENSER_SQL = pydantic_model_to_create_table_sql(
         CondenserSchema,
         table_name=AgentTable.CONDENSER,
+        extra_columns=EXTRA_CONDENSER_COLUMNS,
         add_id_pk=True,
         add_timestamp=True
     )

@@ -44,7 +44,7 @@ class KnowledgeCondenser(AgentRetryMixin):
         ]
         return messsages
     
-    async def run(self, cwe_id: str):
+    async def run(self, cwe_id: str, support_count: int):
         self.cwe_id = cwe_id
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
@@ -59,5 +59,5 @@ class KnowledgeCondenser(AgentRetryMixin):
             rebuild_fn=self._rebuild_client,
             input=messages,
         )
-        await self.tools.save_cwe_lessons(response)
+        await self.tools.save_cwe_lessons(response, support_count)
         return response  
