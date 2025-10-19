@@ -1,5 +1,18 @@
 import orjson
 from typing import Iterable, Mapping, Any
+import re
+
+def remove_c_comments(code: str) -> str:
+    """
+    Removes both single-line (//) and multi-line (/* */) comments from C code.
+    """
+    # Remove all multi-line comments (/* ... */)
+    code = re.sub(r'/\*.*?\*/', '', code, flags=re.DOTALL)
+
+    # Remove all single-line comments (//...) — only up to the end of the line
+    code = re.sub(r'//.*', '', code)
+
+    return code
 
 def filter_dict_fields(
     keys: Iterable[str], 
