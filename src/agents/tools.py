@@ -1,14 +1,15 @@
 import inspect
 from typing import List, Callable, Annotated, Optional
 from langgraph.prebuilt import InjectedState
-from schema.agents import InjectionSchema, ValidationOuput, Context, ResearcherSchema
-from agents.states import InjectorState, ResearcherState
+from schema.agents import InjectionSchema, ValidatorOutput, Context, ResearcherSchema
+from agents.states import ResearcherState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
 from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER_TOOL_CONFIG, CONDENSER_TOOL_CONFIG
 from utils.decorators import exclude_tool, critical_tool
 from langchain_tavily import TavilySearch
 from utils.common import hash_data
+from utils.filter import remove_c_comments
 import logging
 from services.local.cache import read_cache, update_cache
 
@@ -116,41 +117,38 @@ class InjectorTools(BaseTools):
         self.table_name = self.config["table_name"]
         self.db = SQLiteDBService()
 
-    @critical_tool
-    async def add_injection(
+    async def save_injections(
         self,
         injections: list[InjectionSchema],
-        state: Annotated[InjectorState, InjectedState]
-    ) -> str:
+        context: Context
+    ) -> list[str]:
         """
-        Add CWE injections from a list of InjectionSchema objects.
+        Save CWE injections from a list of InjectionSchema objects.
 
-        Skips injections where transformed_code == original_pattern.
-        Returns a message per injection (ROI + CWE + status).
+        Skips any injection where `transformed_code` matches `original_pattern`.
+        Returns a list of messages describing failed injections, including ROI, CWE, and status.
         """
+
         if not injections:
-            return "No injections provided; nothing added."
+            return ["No injections provided; at least one is required."]
 
         messages = []
-        roi_lines = state.context.lines.split('\n')
+        roi_lines = context.lines.split('\n')
 
         for inj in injections:
-            if inj.original_pattern == inj.transformed_code:
+            if remove_c_comments(inj.original_pattern) == remove_c_comments(inj.transformed_code):
                 messages.append(
-                    f"ROI {inj.roi_index} ({inj.cwe_label}): No meaningful change; skipped."
+                    f"ROI {inj.roi_index} ({inj.cwe_label}): No meaningful change;"
                 )
                 continue
 
             injection_data = flatten_pydantic(inj)
-            injection_data["func_name"] = state.context.func_name
+            injection_data["func_name"] = context.func_name
             injection_data["lines"] = roi_lines[inj.roi_index - 1]
             injection_data["ref_hash"] = hash_data(injection_data)
             await self.db.save_data(self.table_name, injection_data)
 
-            messages.append(
-                f"Injection for ROI {inj.roi_index} with CWE {inj.cwe_label} added successfully."
-            )
-        return "\n".join(messages)
+        return messages
     
 class ValidatorTools(BaseTools):
     def __init__(self, config: Optional[dict] | None = VALIDATOR_TOOL_CONFIG):
@@ -198,9 +196,9 @@ class ValidatorTools(BaseTools):
 
     
     @exclude_tool
-    async def save_validations(self, validations: ValidationOuput, context: Context) -> bool:
+    async def save_validations(self, validations: ValidatorOutput, context: Context) -> bool:
         """
-        Save all validation results from ValidationOuput to the database.
+        Save all validation results from ValidatiorOuput to the database.
         Returns True on success, False otherwise.
         """
         if not validations or not validations.validation_results:
