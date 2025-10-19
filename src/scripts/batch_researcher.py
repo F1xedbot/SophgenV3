@@ -9,7 +9,6 @@ from google.api_core.exceptions import ResourceExhausted
 
 from agents.researcher import Researcher
 from agents.states import ResearcherState
-from agents.tools import ResearcherTools
 from initializer import init
 from services.llm import LLMService
 from services.sqlite import SQLiteDBService
@@ -33,8 +32,7 @@ async def run_validation(index: int, cwe_id: str, llm: LLMService, db: SQLiteDBS
         logger.info(f"[{index}] Skipping '{cwe_id}' — already in DB.")
         return
 
-    researcher_tools = ResearcherTools()
-    researcher = Researcher(llm, researcher_tools)
+    researcher = Researcher(llm)
     state = ResearcherState(messages=[], cwe_id=cwe_id)
 
     for attempt in range(1, MAX_RETRIES + 1):

@@ -12,12 +12,12 @@ import pandas as pd
 from utils.enums import LLMModels
 from services.llm import LLMService
 from agents.injector import Injector
-from agents.tools import InjectorTools
 from utils.filter import filter_list_fields
 from schema.agents import Context
-from agents.states import InjectorState
 from services.sqlite import SQLiteDBService
 from initializer import init
+
+from agents.tools import CondenserTools
 
 # ---------------- CONFIG ---------------- #
 INPUT_CSV = "data/merged_test_input.csv"
@@ -62,19 +62,7 @@ async def run_injection(index: int, row: pd.Series, llm: LLMService, db: SQLiteD
 
     cwe_details_str = orjson.dumps(cwe_details, option=orjson.OPT_INDENT_2).decode("utf-8")
 
-    injector_tools = InjectorTools()
-    injector_agent = Injector(llm, injector_tools)
-
-    initial_state = InjectorState(
-        messages=[],
-        context=Context(
-            func_code=func_code,
-            rois=rois,
-            cwe_details=cwe_details_str,
-            lines=lines,
-            func_name=func_name,
-        ),
-    )
+    injector_agent = Injector(llm)
 
     # Retry loop
     for attempt in range(1, MAX_RETRIES + 1):
@@ -82,7 +70,15 @@ async def run_injection(index: int, row: pd.Series, llm: LLMService, db: SQLiteD
             logger.info(f"[{index}] Injecting '{func_name}' (attempt {attempt}/{MAX_RETRIES})...")
 
             response = await asyncio.wait_for(
-                injector_agent.run(initial_state),
+                injector_agent.run(
+                    Context(
+                        func_code=func_code,
+                        rois=rois,
+                        cwe_details=cwe_details_str,
+                        lines=lines,
+                        func_name=func_name,
+                    ),
+                ),
                 timeout=MAX_TASK_TIMEOUT
             )
 
@@ -91,7 +87,7 @@ async def run_injection(index: int, row: pd.Series, llm: LLMService, db: SQLiteD
             return
 
         except asyncio.TimeoutError:
-            logger.warning(f"[{index}] ⏱️ Timeout after {MAX_TASK_TIMEOUT}s for '{func_name}'. Skipping.")
+            logger.warning(f"[{index}] Timeout after {MAX_TASK_TIMEOUT}s for '{func_name}'. Skipping.")
             break
 
         except ResourceExhausted as e:
