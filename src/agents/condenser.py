@@ -1,46 +1,57 @@
 from agents.mixins import AgentRetryMixin
 from services.llm import LLMService
 from schema.agents import CondenserSchema
+from agents.tools import CondenserTools
+from agents.prompt import CONDENSER_PROMPT, CONDERSER_CONTEXT_PROMPT
 from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
+import logging
+import orjson
+
+logger = logging.getLogger(__name__)
 
 class KnowledgeCondenser(AgentRetryMixin):
     def __init__(self, llm: LLMService) -> None:
         self.llm = llm
+        self.tools = CondenserTools()
         self.agent = self._build_agent()
     
     def _build_agent(self):
         return self.llm.client.with_structured_output(CondenserSchema)
     
-    def _rebuild_client(self, new_key: str):
-        self.llm.client = self.llm._init_client(new_key)
+    def _rebuild_client(self):
+        self.llm.client = self.llm._init_client()
         self.agent = self._build_agent()
 
-    def build_messages(self) -> list[AnyMessage]:
+    def _dump_context(self, context: dict):
+        return orjson.dumps(context, option=orjson.OPT_INDENT_2).decode("utf-8")
 
-        all_injections = self.tools.get_injections(self.context.func_name)
-        if not all_injections:
-            raise AssertionError(f"No injections found for: {self.context.func_name}")
+    async def build_messages(self) -> list[AnyMessage]:
+        feedbacks = await self.tools.get_feedbacks([self.cwe_id])
+        latest_strategy = await self.tools.get_latest_strategy(self.cwe_id)
+        cwe_details = await self.tools.get_cwe_details([self.cwe_id])
 
+        if not feedbacks or not cwe_details:
+            logger.info(f"No feedbacks or cwe details found for: {self.cwe_id}")
+            return []
+        
         messsages = [
-            SystemMessage(content=VALIDATOR_PROMPT),
-            HumanMessage(content=VALIDATOR_CONTEXT_PROMPT.format(
-                function_code=self.context.func_code,
-                injections=json.dumps(all_injections, indent=2, ensure_ascii=False)
+            SystemMessage(content=CONDENSER_PROMPT),
+            HumanMessage(content=CONDERSER_CONTEXT_PROMPT.format(
+                previous_strategies=self._dump_context(latest_strategy),
+                feedbacks=self._dump_context(feedbacks),
+                cwe_details=self._dump_context(cwe_details)
             ))
         ]
         return messsages
     
-    async def run(self, context: Context):
-        context_dict = context.model_dump()
-        missing = [k for k in self.required_keys if k not in context_dict]
-        if missing:
-            raise KeyError(f"Missing required validator keys: {missing}")
-        
-        self.context = context
-
+    async def run(self, cwe_id: str):
+        self.cwe_id = cwe_id
         provider = self.llm.config.provider
         key_manager = self.llm.config.key_manager
-        messages = self.build_messages()
+        messages = await self.build_messages()
+        if not messages:
+            return {}
+        
         response = await self.safe_invoke(
             invoke_fn=self.agent.ainvoke,
             provider=provider,
@@ -48,4 +59,5 @@ class KnowledgeCondenser(AgentRetryMixin):
             rebuild_fn=self._rebuild_client,
             input=messages,
         )
-        return await self.tools.save_validations(response, self.context)        
+        await self.tools.save_cwe_lessons(response)
+        return response  

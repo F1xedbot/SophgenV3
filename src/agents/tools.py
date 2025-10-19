@@ -1,7 +1,7 @@
 import inspect
 from typing import List, Callable, Annotated, Optional
 from langgraph.prebuilt import InjectedState
-from schema.agents import ValidatorOutput, Context, ResearcherSchema, InjectorOutput
+from schema.agents import ValidatorOutput, Context, ResearcherSchema, InjectorOutput, CondenserSchema
 from agents.states import ResearcherState
 from services.sqlite import SQLiteDBService
 from helpers.pydantic_to_sql import flatten_pydantic
@@ -9,7 +9,7 @@ from config.agent import INJECTOR_TOOL_CONFIG, VALIDATOR_TOOL_CONFIG, RESEARCHER
 from utils.decorators import exclude_tool, critical_tool
 from langchain_tavily import TavilySearch
 from utils.common import hash_data
-from utils.filter import remove_c_comments
+from utils.filter import remove_c_comments, filter_list_fields
 import logging
 from services.local.cache import read_cache, update_cache
 
@@ -219,12 +219,52 @@ class CondenserTools(BaseTools):
     def __init__(self, config: Optional[dict] | None = CONDENSER_TOOL_CONFIG):
         super().__init__()
         self.config = config
+        self.table_name = self.config["table_name"]
         self.references = self.config["references"]
         self.ref_key = self.config["ref_key"]
         self.merge_key = self.config["merge_key"]
         self.excluded_keys = self.config["excluded_keys"]
+        self.cwe_table = self.config["cwe_table"]
+        self.cwe_table_ref_key = self.config["cwe_table_ref_key"]
 
-    async def get_context(self, cwe_id: str) -> list[dict]:
+    async def save_cwe_lessons(self, cwe_lesson: CondenserSchema) -> bool:
+        if not cwe_lesson: 
+            return False
+        try:
+            cwe_lesson_data = flatten_pydantic(cwe_lesson)
+            await self.db.save_data(self.table_name, cwe_lesson_data)
+            return True
+        except Exception as e:
+            logging.exception(f"Failed to save cwe lesson: {e}")
+            return False
+
+    async def get_latest_strategy(self, cwe_id: str) -> dict | None:
+        previous = await self.db.get_data_group(self.table_name, self.ref_key, cwe_id)
+        if not previous:
+            return None
+
+        filtered = {
+            k: v
+            for k, v in next(iter(previous.values())).items()
+            if k not in self.excluded_keys
+        }
+        return filtered
+
+    
+    async def get_cwe_details(self, cwe_ids: list[str]) -> dict:
+        cwe_data = await self.db.get_data_by_keys(self.cwe_table, self.cwe_table_ref_key, cwe_ids)
+        cwe_fields = [
+            "cwe_id",
+            "cwe_name",
+            "vulnerable_code_patterns",
+            "typical_code_context",
+            "minimal_code_modification",
+            "code_injection_points",
+        ]
+        cwe_details = filter_list_fields(cwe_ids, cwe_data, cwe_fields, key_field=self.cwe_table_ref_key)
+        return cwe_details
+
+    async def get_feedbacks(self, cwe_id: str) -> list[dict]:
         """
         Fetch reference data for a CWE ID across multiple tables, 
         """
