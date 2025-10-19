@@ -2,11 +2,11 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class Context(BaseModel):
-    func_name: Optional[str] = None
-    rois: Optional[str] = None
-    lines: Optional[str] = None
-    cwe_details: Optional[str] = None
+    func_name: str
     func_code: str
+    lines: str
+    rois: Optional[str] = None
+    cwe_details: Optional[str] = None
 
 class ResearcherSchema(BaseModel):
     """Respond to the user with this"""
@@ -72,8 +72,11 @@ class InjectionSchema(BaseModel):
     camouflage: str = Field("", description="Short explaination of how the injected changes were disguised to appear natural")
     attack_vec: str = Field("", description="Short explanation of how this injected vulnerability can be exploited")
                             
-class ValidationOuput(BaseModel):
+class ValidatorOutput(BaseModel):
     validation_results: list[ValidationSchema]
+
+class InjectorOutput(BaseModel):
+    injection_results: list[InjectionSchema]
 
 class CondenserSchema(BaseModel):
     cwe_label: str = Field(..., description="CWE-ID.")
