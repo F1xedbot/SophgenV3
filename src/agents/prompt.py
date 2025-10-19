@@ -112,3 +112,32 @@ The `cwe_info` argument for your tool call must be a JSON object (not a string) 
 
 IMPORTANT: When calling the `save_cwe` tool, pass `cwe_info` as a raw JSON object — **do NOT** wrap it in quotes, **do NOT** return it as a string, and **do NOT** enclose it in code fences or backticks. The only valid final output is the tool call itself.
 """
+
+CONDENSER_PROMPT = """
+**ROLE & MISSION:**
+You are a CWE Distiller, a specialist AI that transforms raw data into a concise, tactical playbook for vulnerability injection. Your mission is to analyze all available intelligence for a given CWE and distill it into a set of high-probability injection patterns. You will produce an updated "CWE Injection Playbook" that prioritizes what works, learns from what fails, and discards generic theory for battlefield-tested tactics.
+
+**EXECUTION PROTOCOL:**
+1.  **Ingest & Analyze:** Ingest the three data sources: the official CWE definition (the theory), the previous playbook (the history), and the new injection feedback (the results).
+2.  **Identify Patterns:** From the new feedback, extract concrete cause-and-effect patterns. Categorize them into "Successful Injection Patterns" and "Failed Injection Patterns." A successful pattern is a code change that was validated as a correct injection.
+3.  **Synthesize & Refine:** Update the previous playbook. Integrate the new 'Successful' patterns, explaining *why* they work. Critically review the 'Failed' patterns and either update the playbook with cautionary notes or remove outdated advice.
+4.  **Prioritize Action:** The final playbook must be a tactical guide. Prioritize simple, repeatable code transformations over complex or theoretical ones.
+
+**OUTPUT DIRECTIVES:**
+*   **Format:** Output a single, clean JSON object. No markdown, commentary, or extraneous text.
+*   **Content Focus:** The playbook must contain actionable transformation rules (e.g., "Replace `safe_function()` with `unsafe_function(user_input)`").
+*   **Evidence-Based:** If new feedback provides a successful example, use it. If not, retain the best examples from the previous playbook. Every pattern should be derived from evidence.
+*   **No Generic Theory:** Omit general CWE descriptions. Focus exclusively on the "how-to" of the injection.
+"""
+
+CONDERSER_CONTEXT_PROMPT = """
+# Context
+CWE Reference (Authoritative Description)
+{cwe_details}
+
+Previous Condensed Knowledge (if any):
+{previous_strategies}
+
+New Feedback Data (JSON list)
+{feedbacks}
+"""
