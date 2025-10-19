@@ -63,14 +63,14 @@ class ValidationSchema(BaseModel):
     )
 
 class InjectionSchema(BaseModel):
-    roi_index: int = Field(..., description="1-based index of the ROI being modified.")
-    cwe_label: str = Field(..., description="CWE-ID.")
-    original_pattern: str = Field(..., description="Single-line ROI snippet (exact snippet).")
-    transformed_code: str = Field(..., description="Single-line transformed ROI snippet.")
-    tags: List[str] = Field(default_factory=list, description="Short tokens (max 5) describing the technique.")
-    modification: str = Field("", description="One short phrase summarizing the change. Empty string if none.")
-    camouflage: str = Field("", description="Short disguise justification; empty string if none.")
-    attack_vec: str = Field("", description="Short attack vector description; empty string if none.")
+    roi_index: int = Field(..., description="1-based index of the ROI being modified")
+    cwe_label: str = Field(..., description="CWE-ID")
+    original_pattern: str = Field(..., description="Single-line ROI snippet (exact snippet)")
+    transformed_code: str = Field(..., description="Single-line transformed ROI snippet")
+    tags: List[str] = Field(default_factory=list, description="Short tokens (max 5) describing the technique")
+    modification: str = Field("", description="Short phrase summarizing the change")
+    camouflage: str = Field("", description="Short explaination of how the injected changes were disguised to appear natural")
+    attack_vec: str = Field("", description="Short explanation of how this injected vulnerability can be exploited")
                             
 class ValidationOuput(BaseModel):
     validation_results: list[ValidationSchema]
