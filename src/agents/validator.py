@@ -27,6 +27,8 @@ class Validator(AgentRetryMixin):
 
     async def build_messages(self) -> list[AnyMessage]:
         all_injections = await self.tools.get_injections(self.context.func_name)
+        all_cwes = await self.tools.get_injection_cwes(all_injections)
+
         if not all_injections:
             logger.info(f"No injections found for: {self.context.func_name}")
             return []
@@ -35,7 +37,8 @@ class Validator(AgentRetryMixin):
             SystemMessage(content=VALIDATOR_PROMPT),
             HumanMessage(content=VALIDATOR_CONTEXT_PROMPT.format(
                 function_code=self.context.func_code,
-                injections=self._dump_context(all_injections)
+                injections=self._dump_context(all_injections),
+                cwe_details=self._dump_context(all_cwes)
             ))
         ]
         return messsages
