@@ -26,8 +26,12 @@ class KnowledgeCondenser(AgentRetryMixin):
         return orjson.dumps(context, option=orjson.OPT_INDENT_2).decode("utf-8")
 
     async def build_messages(self) -> list[AnyMessage]:
-        feedbacks = await self.tools.get_feedbacks([self.cwe_id])
-        latest_strategy = await self.tools.get_latest_strategy(self.cwe_id, self.interval)
+        latest_strategy = await self.tools.get_latest_strategy(self.cwe_id)
+        max_samples = self.interval
+        if latest_strategy:
+            max_samples = self.support_count - latest_strategy["support_count"]
+
+        feedbacks = await self.tools.get_feedbacks([self.cwe_id], max_samples, self.interval)
         cwe_details = await self.tools.get_cwe_details([self.cwe_id])
 
         if not feedbacks or not cwe_details:
