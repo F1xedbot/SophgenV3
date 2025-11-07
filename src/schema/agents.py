@@ -27,13 +27,13 @@ class ValidationSchema(BaseModel):
     )
     effectiveness: int = Field(
         ...,
-        ge=1,
+        ge=0,
         le=10,
         description="Score (1-10) rating how realistically exploitable the new vulnerability is."
     )
     plausibility: int = Field(
         ...,
-        ge=1,
+        ge=0,
         le=10,
         description="Score (1-10) rating how natural the code looks. A high score means it resembles a common developer mistake."
     )
@@ -80,7 +80,7 @@ class InjectorOutput(BaseModel):
 
 class CondenserSchema(BaseModel):
     cwe_label: str = Field(..., description="CWE-ID.")
-    works_text: str = Field(..., description="Bulleted list or concise text of strategies that worked for this CWE")
-    avoid_text: str = Field(..., description="Bulleted list or concise text of strategies that failed or should be avoided")
+    works_text: str = Field(..., description="Short bulleted list or concise text of strategies that worked for this CWE")
+    avoid_text: str = Field(..., description="Short bulleted list or concise text of strategies that failed or should be avoided")
     examples: List[str] = Field("", description="A few representative successful injections snippet")
     reasons: List[str] = Field("", description="Short reasoning why each injections worked")
