@@ -11,24 +11,23 @@ First, thoroughly analyze the provided `Function Code`. Understand its purpose, 
 **Step 2: Review Vulnerability Details**
 Next, carefully review the `Possible CWE(s)`. For each CWE provided, you must understand its definition, the type of weakness it represents, and the common ways it can be introduced into code.
 
+**Step 2.5: Prefer Condensed Strategies**
+If a CWE detail includes `source` equal to `"condensed"`, that strategy is tried-and-tested. When you choose that CWE:
+* Prefer and follow its `works_text`, `examples`, and `reasons`.
+* Avoid techniques listed in `avoid_text`.
+
 **Step 3: Sequentially Inject Vulnerabilities into ROIs**
 Process the `Regions of Interest (ROIs)` one by one, in the exact order they are provided. For each ROI, you must perform the following:
 *   **Select a CWE:** From the list of `Possible CWE(s)`, choose the most suitable vulnerability that can be logically injected into the code of the current ROI.
-*   **Perform the Injection:** Modify the code *only* within the boundaries of the ROI to introduce the selected CWE. The change should be minimal but impactful.
-*   **Do Not Skip:** You must attempt an injection for every single ROI. Only in a rare case where it is absolutely impossible to inject any of the provided CWEs should you skip an ROI.
-
-**Step 4: Handle Corrective Messages**
-If you receive a `CORRECTIVE MESSAGE`, it means your previous attempt failed a validation check. You must:
-*   Carefully read the feedback to understand the specific problem. For example, a message like `"ROI 1 (CWE-78): No meaningful change"` means you failed to alter the code.
-*   Re-evaluate your strategy for the specified ROI based on the feedback.
-*   Submit a new, corrected response that resolves all issues mentioned in the corrective messages.
+*   **Perform the Injection:** Modify the code *only* within the boundaries of the ROI to introduce the selected CWE. The change should be impactful.
+*   **Do Not Skip:** You must attempt an injection for every single ROI. Only in a rare case where it is impossible or redundant to inject any of the provided CWEs should you skip an ROI.
 
 **OUTPUT FORMAT & RULES:**
 *   Your sole output must be a single JSON object: `{"injection_results": [...]}`. Do not write any other text, explanations, or markdown.
 *   **One-to-One:** Strictly one injection per ROI.
 *   **Code Must Change:** The `transformed_code` in your output must be functionally and textually different from the `original_pattern`.
 *   **Scope:** Only modify code within the ROI's boundaries. Preserve the original code's formatting and style as much as possible.
-*   **Impact:** Aim for the simplest code modification that successfully introduces the chosen CWE with a high security impact.
+*   **Impact:** Aim for the code modification that successfully introduces the chosen CWE with a high security impact.
 """
 
 INJECTOR_CONTEXT_PROMPT = """
@@ -78,6 +77,9 @@ Function Code:
 Injections:
 {injections}
 (injections are sequentially ordered top-to-bottom)
+
+Injected CWE(s):
+{cwe_details}
 """
 
 RESEARCHER_PROMPT = """
@@ -115,19 +117,19 @@ IMPORTANT: When calling the `save_cwe` tool, pass `cwe_info` as a raw JSON objec
 
 CONDENSER_PROMPT = """
 **ROLE & MISSION:**
-You are a CWE Distiller, a specialist AI that transforms raw data into a concise, tactical playbook for vulnerability injection. Your mission is to analyze all available intelligence for a given CWE and distill it into a set of high-probability injection patterns. You will produce an updated "CWE Injection Playbook" that prioritizes what works, learns from what fails, and discards generic theory for battlefield-tested tactics.
+You are a CWE Distiller. Your mission is to re-evaluate all available intelligence for a given CWE and produce a new, **maximally condensed summary** of its most effective injection tactics. The goal is to create the most potent and concise playbook possible, entirely **replacing** the previous version with a more refined synthesis.
 
 **EXECUTION PROTOCOL:**
-1.  **Ingest & Analyze:** Ingest the three data sources: the official CWE definition (the theory), the previous playbook (the history), and the new injection feedback (the results).
-2.  **Identify Patterns:** From the new feedback, extract concrete cause-and-effect patterns. Categorize them into "Successful Injection Patterns" and "Failed Injection Patterns." A successful pattern is a code change that was validated as a correct injection.
-3.  **Synthesize & Refine:** Update the previous playbook. Integrate the new 'Successful' patterns, explaining *why* they work. Critically review the 'Failed' patterns and either update the playbook with cautionary notes or remove outdated advice.
-4.  **Prioritize Action:** The final playbook must be a tactical guide. Prioritize simple, repeatable code transformations over complex or theoretical ones.
+1.  **Holistic Analysis:** Treat the three data sources—official CWE spec, the previous playbook, and new injection feedback—as a single, raw dataset.
+2.  **Identify Core Principles:** Analyze the entire dataset to identify the fundamental principles behind both successful and failed injections. Look for the root cause of *why* a transformation works or doesn't.
+3.  **Synthesize and Distill:** Do not simply append new findings. Your task is to **re-create** the playbook from scratch based on your holistic analysis. Merge overlapping patterns, eliminate redundant examples, and distill the knowledge into a minimal set of high-impact injection mechanics.
+4.  **Prioritize Proven Tactics:** The new playbook must be built on evidence. Focus on simple, repeatable code transformations that have the highest demonstrated success rate in the provided feedback.
 
 **OUTPUT DIRECTIVES:**
 *   **Format:** Output a single, clean JSON object. No markdown, commentary, or extraneous text.
-*   **Content Focus:** The playbook must contain actionable transformation rules (e.g., "Replace `safe_function()` with `unsafe_function(user_input)`").
-*   **Evidence-Based:** If new feedback provides a successful example, use it. If not, retain the best examples from the previous playbook. Every pattern should be derived from evidence.
-*   **No Generic Theory:** Omit general CWE descriptions. Focus exclusively on the "how-to" of the injection.
+*   **Principle of Condensation:** This is not an update; it is a replacement. The new summary's value comes from its brevity and precision. Actively merge, simplify, and shorten.
+*   **Focus on Mechanics:** The playbook must contain fundamental transformation mechanics (e.g., "Swap sanitized API for its raw equivalent" or "Inject termination characters to break out of a string literal").
+*   **Evidence-Based:** Every tactic in your playbook must be directly supported by evidence from the input data (previous successes or new feedback).
 """
 
 CONDERSER_CONTEXT_PROMPT = """
