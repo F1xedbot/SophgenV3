@@ -143,3 +143,39 @@ Previous Condensed Knowledge (if any):
 New Feedback Data (JSON list)
 {feedbacks}
 """
+
+GROUND_TRUTH_PROMPT = """
+### Goal
+
+Decide if the student **understood the core concept** of the vulnerability shown in the ground truth file.
+They **pass** if their injection is *conceptually similar* — not necessarily identical in code.
+
+### Rating Checklist
+
+1. **Concept Match (Main Criterion)**
+   * Does the student's change reproduce the *same weakness or effect* as the ground truth?
+   * *Example:* Ground truth causes a buffer overflow (CWE-119) by skipping a size check.
+     * Pass: Student also bypasses a size check (same idea, different code).
+     * Fail: Student injects a code-quality or unrelated issue (e.g., CWE-17).
+
+2. **Location Match**
+   * Is the injection in the *same function or relevant lines* as the original flaw?
+
+3. **CWE Match**
+   * Did the student label it with the *correct CWE ID* (e.g., CWE-119)?
+
+### Verdict
+* **PASS:** Concept matches the ground truth (Check 1).
+* **FAIL:** Concept is unrelated or targets a different weakness.
+"""
+
+GROUND_TRUTH_CONTEXT_PROMPT = """
+# Ground Truth (Vulnerable Reference)
+{vul_code}
+
+# Benign (Original) Code
+{benign_code}
+
+# Student Injection Attempt
+{injection_attempt}
+"""

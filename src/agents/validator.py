@@ -1,7 +1,7 @@
 from services.llm import LLMService
 from agents.tools import ValidatorTools 
-from schema.agents import Context, ValidatorOutput
-from agents.prompt import VALIDATOR_CONTEXT_PROMPT, VALIDATOR_PROMPT
+from schema.agents import Context, ValidatorOutput, GroundTruthCheckerOutput
+from agents.prompt import VALIDATOR_CONTEXT_PROMPT, VALIDATOR_PROMPT, GROUND_TRUTH_CONTEXT_PROMPT, GROUND_TRUTH_PROMPT
 from langchain_core.messages import SystemMessage, HumanMessage, AnyMessage
 from agents.mixins import AgentRetryMixin
 import logging
@@ -61,3 +61,45 @@ class Validator(AgentRetryMixin):
         await self.tools.save_validations(response, self.context)
         return response   
 
+class GroundTruthChecker(AgentRetryMixin):
+    def __init__(self, llm: LLMService) -> None:
+        self.llm = llm
+        self.agent = self._build_agent()
+
+    def _build_agent(self):
+        return self.llm.client.with_structured_output(GroundTruthCheckerOutput)
+    
+    def _rebuild_client(self):
+        self.llm.client = self.llm._init_client()
+        self.agent = self._build_agent()
+
+    def _dump_context(self, context: dict):
+        return orjson.dumps(context, option=orjson.OPT_INDENT_2).decode("utf-8")
+
+    async def build_messages(self) -> list[AnyMessage]:
+        messsages = [
+            SystemMessage(content=GROUND_TRUTH_PROMPT),
+            HumanMessage(content=GROUND_TRUTH_CONTEXT_PROMPT.format(
+                vul_code=self._dump_context(self.context.get("vul_code", {})),
+                benign_code=self._dump_context(self.context.get("benign_code", {})),
+                injection_attempt=self._dump_context(self.context.get("injection_attempt", {}))
+            ))
+        ]
+        return messsages
+    
+    async def run(self, context: dict):
+        self.context = context
+        provider = self.llm.config.provider
+        key_manager = self.llm.config.key_manager
+        messages = await self.build_messages()
+        if not messages:
+            return {}
+
+        response = await self.safe_invoke(
+            invoke_fn=self.agent.ainvoke,
+            provider=provider,
+            key_manager=key_manager,
+            rebuild_fn=self._rebuild_client,
+            input=messages,
+        )
+        return response  

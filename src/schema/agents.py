@@ -75,6 +75,9 @@ class InjectionSchema(BaseModel):
 class ValidatorOutput(BaseModel):
     validation_results: list[ValidationSchema]
 
+class GroundTruthCheckerOutput(BaseModel):
+    valid_attempt: bool = Field(..., description="True if PASS, False if FAIL")  
+
 class InjectorOutput(BaseModel):
     injection_results: list[InjectionSchema]
 
