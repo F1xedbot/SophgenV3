@@ -38,7 +38,7 @@ async def run_batch_validation(batch: list[Context], validator: Validator):
     if not batch:
         return
 
-    logger.info(f"🚀 Running validation sequentially for {len(batch)} items...")
+    logger.info(f"Running validation sequentially for {len(batch)} items...")
     
     for context in batch:
         func_name = context.func_name
