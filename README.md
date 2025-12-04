@@ -9,11 +9,13 @@ SOPHGEN is a framework for automated vulnerability generation that prioritizes *
 
 ## Demo
 <p align="center">
-  <!-- Placeholder for Demo Video/GIF -->
-  <img src="https://placehold.co/600x400?text=Demo+Coming+Soon" alt="Demo Placeholder" width="80%"/>
+  <video autoplay loop muted playsinline width="80%">
+    <source src="assets/SophgenV3-Demo.mp4" type="video/mp4">
+  </video>
   <br>
   <em>Watch Sophgen in action</em>
 </p>
+
 
 ## Problem
 High-quality vulnerable code is essential for training security tools and AI models—but **it’s extremely limited**. Existing automated generators try to fill the gap, yet often produce unrealistic samples: code that doesn’t compile, isn’t semantically valid, or doesn’t resemble real-world vulnerabilities.
