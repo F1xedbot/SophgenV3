@@ -8,13 +8,7 @@ SOPHGEN is a framework for automated vulnerability generation that prioritizes *
 </p>
 
 ## Demo
-<p align="center">
-  <a href="https://github.com/user-attachments/assets/2f9d8e51-b3ec-48fb-b59a-1492a91b7fcf">
-    <img src="https://github.com/user-attachments/assets/2f9d8e51-b3ec-48fb-b59a-1492a91b7fcf" width="80%">
-  </a>
-  <br>
-  <em>Watch Sophgen in action</em>
-</p>
+https://github.com/user-attachments/assets/2f9d8e51-b3ec-48fb-b59a-1492a91b7fcf
 
 ## Problem
 High-quality vulnerable code is essential for training security tools and AI models—but **it’s extremely limited**. Existing automated generators try to fill the gap, yet often produce unrealistic samples: code that doesn’t compile, isn’t semantically valid, or doesn’t resemble real-world vulnerabilities.
@@ -162,3 +156,4 @@ These results show that SOPHGEN can reliably generate realistic, diverse, and se
 └── Dockerfile     # Container definition
 
 ```
+
