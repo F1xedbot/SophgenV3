@@ -53,14 +53,11 @@ You can run SophgenV3 using Docker or by setting it up manually.
 
 ### Option 1: Docker (Recommended)
 
-Build and run the container using the provided Dockerfile.
+Build and run the container using the provided Dockerfile & compose.yml.
 
 ```bash
 # Build the image
-docker build -t sophgen-v3 .
-
-# Run the container
-docker run -p 8000:8000 sophgen-v3
+docker compose up --build -d
 ```
 
 Access the application at `http://localhost:8000`.
