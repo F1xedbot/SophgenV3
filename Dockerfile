@@ -24,7 +24,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy application code
 COPY src/ ./src/
 COPY data/ ./data/
-COPY .env-example .env
+COPY .env .env
+
+ENV PYTHONPATH=/app/src
 
 # Copy built frontend assets
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
