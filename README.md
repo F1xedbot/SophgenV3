@@ -10,7 +10,7 @@ SOPHGEN is a framework for automated vulnerability generation that prioritizes *
 ## Demo
 <p align="center">
   <video autoplay loop muted playsinline width="80%">
-    <source src="assets/SophgenV3-Demo.mp4" type="video/mp4">
+    <source src="/assets/SophgenV3-Demo.mp4" type="video/mp4">
   </video>
   <br>
   <em>Watch Sophgen in action</em>
