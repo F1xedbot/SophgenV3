@@ -1,6 +1,20 @@
 # SophgenV3
 SOPHGEN is a framework for automated vulnerability generation that prioritizes **reliability, diversity, and transparency**.
 
+<p align="center">
+  <img src="assets/sophgen-ui.png" alt="sophgen_ui" width="90%"/>
+  <br>
+  <em>Figure 1: SophgenV3 Interface</em>
+</p>
+
+## Demo
+<p align="center">
+  <!-- Placeholder for Demo Video/GIF -->
+  <img src="https://placehold.co/600x400?text=Demo+Coming+Soon" alt="Demo Placeholder" width="80%"/>
+  <br>
+  <em>Watch Sophgen in action</em>
+</p>
+
 ## Problem
 High-quality vulnerable code is essential for training security tools and AI models—but **it’s extremely limited**. Existing automated generators try to fill the gap, yet often produce unrealistic samples: code that doesn’t compile, isn’t semantically valid, or doesn’t resemble real-world vulnerabilities.
 
@@ -13,13 +27,13 @@ SOPHGEN is designed around four central questions: **where** a vulnerability sho
 <p align="center">
   <img src="assets/sophgenv3.jpg" alt="framework_pipeline" width="90%"/>
   <br>
-  <em>Figure 1: Sophgen Framework Pipeline</em>
+  <em>Figure 2: Sophgen Framework Pipeline</em>
 </p>
 
 <p align="center">
   <img src="assets/graphmodel.jpg" alt="graph_model" width="90%"/>
   <br>
-  <em>Figure 2: GNN Localization Model</em>
+  <em>Figure 3: GNN Localization Model</em>
 </p>
 
 
@@ -37,6 +51,65 @@ Generation is driven by a coordinated **multi-agent pipeline**:
 - A **Feedback Loop** enables the validator to provide condensed guidance back to the injector, progressively improving injection quality.
 
 All steps are traceable, linking each generated vulnerability to its CWE, the decisions made by the agents, and the examples that guided the injection.
+
+## Getting Started
+
+You can run SophgenV3 using Docker or by setting it up manually.
+
+### Option 1: Docker (Recommended)
+
+Build and run the container using the provided Dockerfile.
+
+```bash
+# Build the image
+docker build -t sophgen-v3 .
+
+# Run the container
+docker run -p 8000:8000 sophgen-v3
+```
+
+Access the application at `http://localhost:8000`.
+
+### Option 2: Manual Setup
+
+Prerequisites:
+- Python 3.11+
+- Node.js 20+
+- `uv` (Python package manager)
+
+1.  **Install Python Dependencies**
+    ```bash
+    uv sync
+    ```
+
+2.  **Configure Environment**
+    Run the setup script to configure your path and environment variables.
+    ```powershell
+    # PowerShell
+    . .\.local_env.ps1
+    ```
+
+3.  **Setup Frontend**
+    ```bash
+    cd frontend
+    npm install
+    npm run build
+    ```
+
+4.  **Run the Application**
+    You can run the backend and frontend separately for development.
+
+    **Backend:**
+    ```bash
+    # From the root directory
+    uv run uvicorn src.app:app --port 8000 --reload
+    ```
+
+    **Frontend (Dev Mode):**
+    ```bash
+    cd frontend
+    npm run dev
+    ```
 
 ## The Results
 
@@ -59,23 +132,31 @@ These results show that SOPHGEN can reliably generate realistic, diverse, and se
 
 
 <p align="center">
-  <img src="assets/example_roi_and_cwe_id.png" alt="roi_and_cwe" width="95%"/>
+  <img src="assets/sophgen-condense-knowledge.png" alt="condensed_knowledge" width="95%"/>
   <br>
-  <em>Figure 3: Example Predicted ROIs and CWE IDs</em>
+  <em>Figure 4: Example Condense Knowledge of a specific CWE</em>
 </p>
 
 <p align="center">
-  <img src="assets/example_injection_and_validation.png" alt="injection_and_validation"/>
+  <img src="assets/sophgen-injection.png" alt="injection"/>
   <br>
-  <em>Figure 4: Example Injection and Validation</em>
+  <em>Figure 5: Example Injection</em>
+</p>
+
+<p align="center">
+  <img src="assets/sophgen-validation.png" alt="validation"/>
+  <br>
+  <em>Figure 6: Example Validation</em>
 </p>
 
 ## Repository Structure
 
 ```
 .
-├── data/          # Data forvalidation, and generation
+├── data/          # Data for validation and generation
 ├── notebooks/     # Jupyter notebooks for experimentation and examples
 ├── src/           # Main source code
+├── frontend/      # React frontend application
 ├── .env-example   # Example environment variable template
+└── Dockerfile     # Container definition
 ```
